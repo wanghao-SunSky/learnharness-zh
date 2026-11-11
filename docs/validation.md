@@ -1,10 +1,7 @@
-# Validation scope
+## 验证记录与限制
 
-Base: upstream v0.5.0 (`713377f366771e3e4730e6acd1bc290e0ebc6d6e`).
-
-This publication contains source code only. No private course fixtures, account credentials, screenshots of learning history, or local provider routes are included.
-
-## Reproducible checks
+- **已验证项（源码提交 `e5900f6`）**：已完成类型检查、163 项定向 UI 与设置测试、12 项 ACP mock 测试，以及私有路径与凭据定向扫描；远程 CI（[Actions Run #43020448357](https://github.com/wanghao-SunSky/learnharness-zh/actions/runs/43020448357)）已通过，该结果仅对应源码提交 `e5900f6`。
+- **未覆盖限制**：未运行完整上游测试套件，未执行新一轮生产打包，未在 Windows 与 Linux 上做视觉核对，也未在真实 iPhone 上完成端到端实测；展示截图基于合成 TCP 示例与桌面浏览器手机宽度预览生成，并非真机验收。
 
 ```sh
 npm ci
@@ -14,19 +11,3 @@ npm ci --prefix acp
 npm run --prefix acp build
 npm test --prefix acp
 ```
-
-The optional `scripts/personal-*-smoke.mjs` browser checks require a **disposable test backend**, Chrome (`CHROME_PATH` can override its location), `LH_PREVIEW_URL`, and `LH_PREVIEW_CHAT_ID` pointing to an appropriate synthetic course. These fixtures are not supplied by real user data. The layout check intercepts answer submission, but the UI check changes appearance settings: never point it at a production course directory. Mobile viewport checks are not a substitute for iPhone testing.
-
-## Limits
-
-The complete upstream suite, all three desktop platforms, fresh production packaging, and real iPhone end-to-end behavior have not been revalidated as part of this source publication. Earlier local use is not a guarantee for a clean installation. Per-check publication results are recorded below after execution.
-
-## Publication checks — 2026-11-11
-
-- Fresh dependency installation completed in the separate publication checkout.
-- TypeScript `npm run typecheck`: passed after annotating the ACP answer-normalization callback.
-- Nine targeted UI/settings test files: **163 passed**, 0 failed.
-- Rebuilt ACP core and adapter tests: **12 passed**, 0 failed.
-- `git diff --check`, syntax checks for the adapted smoke scripts, and targeted scans for private paths, course IDs, relay configuration and credential patterns: passed.
-- The original source commit and AGPL license are retained. Generated app bundles, local settings, course data, and screenshots of learning history are not included.
-- No fresh production app package or phone end-to-end test was performed for this publication. Remote CI is separate from these local results.

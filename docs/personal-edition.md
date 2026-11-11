@@ -1,5 +1,21 @@
-# Personal edition
+# Personal 中文自用版边界说明
 
-See the [repository README](../README.md) for scope, build instructions, data-directory separation, limitations, and upstream contribution plans. See [ACP setup](../acp/README.md) for the experimental client/phone adapter.
+本仓库发布的 `LearnHarness Personal` 是面向个人日常中文学习的非官方源码分支（基于上游 `v0.5.0`，提交 `713377f366771e3e4730e6acd1bc290e0ebc6d6e`），重点解决两件自用需求：桌面端的中文长文阅读舒适度，以及出门时用远程客户端继续回答同一节课的题目。
 
-This document intentionally contains no private deployment history or course identifiers.
+## 1. 哪些属于个人定制选择
+
+- **内联中文文案而非 i18n 框架**：当前中文界面是直接替换源码中的英文字符串完成的，没有语言包抽取，也没有界面语言切换器；部分高级设置和菜单仍为英文。
+- **书刊浅色/深色主题与版式**：默认启用纸面浅色主题（并提供对应深色配色），正文改用中文衬线字体回退、17px 字号与 1.8 行距；待答题目固定放在正文底部，桌面宽屏支持选项与解题思路并排、窄屏自动纵向排列。这些均属于个人阅读偏好，不代表上游产品规范。
+- **独立应用标识与禁自动更新**：打包配置 `electron-builder.personal.yml` 将应用命名为 `LearnHarness Personal`（`local.learnharness.personal`），输出目录为 `dist-personal`，并关闭官方自动更新检查，防止上游版本覆盖本地自用改动。
+- **ACP 连续简答与默认把握程度 80**：客户端（如 T3）只传输纯文本与精简表单，答完自动进入下一题；省略可选的思路/随想字段，客观题未填把握程度时默认写入 `80`（选“暂时不知道”则不记录把握程度）。`80` 仅为手机端省去滑块操作的个人默认值，不能当作真实置信度统计使用。
+
+## 2. 数据目录与运行隔离
+
+- **与原版隔离**：macOS 下原版数据位于 `~/Library/Application Support/LearnHarness/data`，Personal 版位于 `~/Library/Application Support/LearnHarness Personal/data`。两者不自动同步、不自动迁移；禁止两个后端同时挂载同一数据目录。
+- **与客户端共享同一后端**：T3 等客户端通过本地 Unix socket 连接正在运行的 `LearnHarness Personal` 后端，读写同一份课程记录。本项目不提供原生 iOS 应用，也不会复刻桌面书刊 UI；Mac 必须保持开机联网，客户端自身的远程认证需单独配置。
+- **模型与桌面专属能力**：仓库不内置任何模型密钥或指定转发线路，需用户自行配置。已创建的课程保留各自绑定的模型，修改全局默认模型仅对新课生效。知识图谱、资料附件与完整设置仍在桌面端完成。
+- **已知未处理项**：客户端会话标题与桌面课程标题未双向同步；T3 端的公式渲染与工具原始 JSON 显示由客户端决定，本版未改动；ACP 已修复跨数据包 UTF-8 中文解码，但客户端已保存的旧历史乱码不会自动修复。
+
+## 3. 公开仓库脱敏范围
+
+本仓库不包含任何个人学习记录、具体课程 ID、本机私有路径、模型服务密钥、路由配置或私人学习截图。构建与运行方法见仓库根目录 [README.md](../README.md)，ACP 客户端配置见 [acp/README.md](../acp/README.md)，验证记录见 [docs/validation.md](validation.md)。

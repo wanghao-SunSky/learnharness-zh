@@ -1,4 +1,4 @@
-> This is the independent Chinese reading edition. File fork-specific issues here. The upstream contribution policy below is retained for reference; it does not imply upstream approval of this fork. Proposed upstream work should follow the original project's current policy.
+> **非官方衍生仓库说明**：本仓库（`wanghao-SunSky/learnharness-zh`）是基于 `amosblomqvist/learnharness` 的个人中文实验分支。涉及局部中文文案、书刊样式或本地 ACP 实验的问题可在本仓反馈；通用修复与核心功能请按下文保留的上游贡献指南提交至原项目，多语言相关改动请对齐上游 #407 与 #457。
 
 # Contributing to LearnHarness
 
