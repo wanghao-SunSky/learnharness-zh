@@ -31,6 +31,7 @@ const { attachChatGPTChild, trustedSender, chatGPTControl } = require("./chatgpt
 const { createSubscriptions, loadSubscriptionSDK } = require("./subscriptions.cjs");
 const { attachSubscriptionChild, subscriptionControl } = require("./subscription-ipc.cjs");
 const { desktopAPIHeaders } = require("./desktop-api.cjs");
+const { startACPBridge } = require("./acp-bridge.cjs");
 const { openWebSubscriptionBrowser } = require("./web-subscription-browser.cjs");
 const { randomBytes } = require("node:crypto");
 const { spawn } = require("node:child_process");
@@ -43,7 +44,7 @@ const path = require("node:path");
 // renderer owns the number; this is the IPC widen target).
 const SIDEBAR_AUTOCLOSE = 928;
 
-const PRODUCT_NAME = "LearnHarness";
+const PRODUCT_NAME = "LearnHarness Personal";
 
 // APP NAME → userData (owner, 2026-10-10): the Application Support dir is
 // exactly "LearnHarness" in dev AND packaged. Packaged Electron would
@@ -142,6 +143,7 @@ let subscriptions = null;
 let subscriptionChild = null;
 // Per-launch request capability, never OAuth tokens and never renderer state.
 let desktopAPISecret = null;
+let acpBridge = null;
 let reopenWindow = null;
 const trustedAppWindows = new Set();
 
@@ -505,8 +507,8 @@ function installUpdateNow() {
 }
 
 function setupAutoUpdater() {
-	if (!app.isPackaged) {
-		log("auto-update: dev build — updater disabled");
+	if (PRODUCT_NAME === "LearnHarness Personal" || !app.isPackaged) {
+		log("auto-update: personal build — updater disabled");
 		reportUpdateStatus("disabled");
 		return;
 	}
@@ -641,7 +643,7 @@ async function main() {
 	});
 
 	// The child must not outlive us — cover every quit path.
-	app.on("before-quit", killServer);
+	app.on("before-quit", () => { acpBridge?.close(); killServer(); });
 	process.on("exit", killServer);
 	process.on("SIGHUP", killServer);
 
@@ -682,6 +684,7 @@ async function main() {
 		await startServer(new URL(url).port);
 		await waitUntilUp(url);
 		log(`server up: ${url}`);
+		acpBridge = await startACPBridge({ directory: path.join(app.getPath("userData"), "acp"), origin: url, secret: desktopAPISecret });
 	} else {
 		log(`dev mode: ${devUrl}`);
 	}

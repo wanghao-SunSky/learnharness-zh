@@ -32,10 +32,10 @@ export const CONFIDENCE_COLORS: readonly string[] = [
 ];
 
 /** The rail's paint for a stop value (0–100). */
-export function confidenceRailStyle(value: number): CSSProperties {
-	const color = CONFIDENCE_COLORS[CONFIDENCE_STOPS.indexOf(value)] ?? CONFIDENCE_COLORS[2]!;
+export function confidenceRailStyle(value: number, accent?: string): CSSProperties {
+	const color = accent ?? CONFIDENCE_COLORS[CONFIDENCE_STOPS.indexOf(value)] ?? CONFIDENCE_COLORS[2]!;
 	return {
-		backgroundColor: "#141414",
+		backgroundColor: "var(--border)",
 		backgroundImage: [
 			`linear-gradient(90deg, ${color} 0%, ${color} ${value}%, transparent ${value}%, transparent 100%)`,
 			...[30, 50, 70, 90].map(

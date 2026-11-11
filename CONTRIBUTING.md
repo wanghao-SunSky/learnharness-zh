@@ -1,3 +1,5 @@
+> This is the independent Chinese reading edition. File fork-specific issues here. The upstream contribution policy below is retained for reference; it does not imply upstream approval of this fork. Proposed upstream work should follow the original project's current policy.
+
 # Contributing to LearnHarness
 
 Bug reports, focused fixes, documentation, reviews, and testing are welcome. LearnHarness is a maintainer-led project with a deliberate core learning experience.

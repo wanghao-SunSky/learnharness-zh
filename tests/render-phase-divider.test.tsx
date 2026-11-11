@@ -18,9 +18,9 @@ import { teachStepIndex } from "../src/core/phases.ts";
 describe("PhaseChip (header)", () => {
 	it("renders the learner-facing label — no colored dot (phase color retired)", () => {
 		for (const [phase, label] of [
-			["probe", "Probing"],
-			["plan", "Planning"],
-			["teach", "Teaching"],
+			["probe", "了解基础"],
+			["plan", "制定计划"],
+			["teach", "讲解"],
 		] as const) {
 			const html = renderToStaticMarkup(<PhaseChip phase={phase} />);
 			assert.ok(html.includes('data-testid="phase-chip"'));
@@ -50,7 +50,7 @@ describe("PhaseDivider (transcript boundary)", () => {
 	it("the plan seam: monochrome dotted rules + node count", () => {
 		const html = renderToStaticMarkup(<PhaseDivider phase="plan" nodeCount={3} />);
 		assert.ok(html.includes('data-testid="phase-divider-plan"'));
-		assert.match(html, /Plan · 3 nodes/);
+		assert.match(html, /学习计划 · 3 个知识点/);
 		assert.ok(html.includes("border-dotted"), "dotted rule");
 		assert.ok(html.includes("border-border"), "monochrome rule");
 		assert.ok(!html.includes("border-phase-"), "phase-colored rules are retired");
@@ -59,7 +59,7 @@ describe("PhaseDivider (transcript boundary)", () => {
 	it("the teach seam: monochrome rule, no count", () => {
 		const html = renderToStaticMarkup(<PhaseDivider phase="teach" />);
 		assert.ok(html.includes('data-testid="phase-divider-teach"'));
-		assert.match(html, /Teaching/);
+		assert.match(html, /讲解/);
 		assert.ok(!html.includes("border-phase-"));
 		assert.ok(!html.includes("text-phase-"));
 		assert.ok(!html.includes("nodes"));
@@ -67,12 +67,12 @@ describe("PhaseDivider (transcript boundary)", () => {
 
 	it("singular node count", () => {
 		const html = renderToStaticMarkup(<PhaseDivider phase="plan" nodeCount={1} />);
-		assert.match(html, /Plan · 1 node\b/);
+		assert.match(html, /学习计划 · 1 个知识点/);
 	});
 
 	it("a plan seam without a count still labels itself", () => {
 		const html = renderToStaticMarkup(<PhaseDivider phase="plan" />);
-		assert.match(html, /Planning/);
+		assert.match(html, /制定计划/);
 	});
 
 	it("probe renders null (never a boundary — phases only advance)", () => {

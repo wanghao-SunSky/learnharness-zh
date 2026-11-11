@@ -167,15 +167,15 @@ describe("render smoke tests", () => {
 		const html = renderDock({ toolName: "quiz", toolCallId: "q1", input: quizInput as never });
 		assert.match(html, /Which planet is closest to the sun\?/);
 		assert.match(html, /Mercury/);
-		assert.match(html, /I don&#x27;t know|I don't know/);
+		assert.match(html, /暂时不知道/);
 		// The learner's voice: a labeled "Your thinking" composer-twin lives
 		// INSIDE the dock — never called optional, inviting the dump.
 		assert.ok(html.includes('data-testid="thinking-field"'), "thinking field present");
-		assert.match(html, /YOUR THINKING/, "labeled as the learner's voice (all caps, owner round 3)");
-		assert.match(html, /Why this answer\? Whatever comes to mind/, "placeholder invites, not apologizes (owner, placeholder round 2026-10-07)");
+		assert.match(html, /你的(?:解题思路|想法)/, "labeled as the learner's voice (all caps, owner round 3)");
+		assert.match(html, /为什么这样选？写下你的思路/, "placeholder invites, not apologizes (owner, placeholder round 2026-10-07)");
 		assert.ok(!html.includes("optional"), "the field is never called optional");
-		assert.match(html, /Submit answer/, "send becomes Submit answer");
-		assert.match(html, /↵ submits · ⇧↵ newline/, "the standard chord is discoverable (owner round 5)");
+		assert.match(html, /提交回答/, "send becomes Submit answer");
+		assert.match(html, /回车提交 · Shift \+ 回车换行/, "the standard chord is discoverable (owner round 5)");
 		// The v1 desync bug: options are buttons with ARIA roles, not native inputs.
 		assert.ok(!html.includes('type="radio"'), "no native radio inputs");
 		assert.ok(html.includes('role="radio"'), "button-based radio role present");
@@ -196,11 +196,11 @@ describe("render smoke tests", () => {
 		// Other is an editable OPTION ROW — a sibling of the options, with the
 		// radio circle + an inline input; picking it never displaces thinking.
 		assert.ok(html.includes('data-testid="other-option"'), "Other is an option row");
-		assert.match(html, /Type your own answer/, "type directly into the option");
+		assert.match(html, /写下其他答案/, "type directly into the option");
 		assert.ok(html.includes('role="radio"'), "Other row keeps the option role");
 		assert.match(html, /aria-checked="false"/, "circle starts unfilled");
 		assert.ok(html.includes('data-testid="thinking-field"'), "thinking field coexists with Other");
-		assert.match(html, /YOUR THINKING/, "ask select-mode also gets the learner's voice");
+		assert.match(html, /你的(?:解题思路|想法)/, "ask select-mode also gets the learner's voice");
 	});
 
 	it("multi-select ask renders checkbox rows and the select-all hint", () => {
@@ -213,7 +213,7 @@ describe("render smoke tests", () => {
 				options: [{ label: "Physics" }, { label: "Philosophy" }],
 			} as never,
 		});
-		assert.match(html, /select all that apply/);
+		assert.match(html, /可多选/);
 		assert.ok(html.includes('role="group"'), "checkbox group");
 		assert.ok((html.match(/role="checkbox"/g) ?? []).length >= 3, "options AND the Other row are checkboxes");
 		assert.ok(html.includes('data-testid="other-option"'), "Other is still an option row in multi-select");
@@ -261,7 +261,7 @@ describe("render smoke tests", () => {
 			input: { question: "Explain the chain rule in your own words." } as never,
 		});
 		assert.ok(html.includes('data-testid="answer-field"'), "text mode is the answer field");
-		assert.match(html, /Your answer/, "labeled as the answer");
+		assert.match(html, /你的回答/, "labeled as the answer");
 		assert.ok(!html.includes('data-testid="thinking-field"'), "no thinking field in text mode (v1)");
 		assert.ok(!html.includes("⌘/Ctrl"), "no dump shortcut hint — Enter already submits");
 	});
@@ -269,7 +269,7 @@ describe("render smoke tests", () => {
 	it("AnsweredCard grades quiz answers (✓/✗ + explanation)", () => {
 		const answer = buildAnswer(quizQD(), { values: ["Venus"] });
 		const html = renderToStaticMarkup(<AnsweredCard answer={answer} />);
-		assert.match(html, /incorrect/);
+		assert.match(html, /再想一想/);
 		// Tucked for ALL questions (owner, 2026-10-07): the explanation sits
 		// behind the Why toggle — never center stage.
 		assert.ok(html.includes("tucked-explanation"), "the Why toggle mounts");
@@ -319,7 +319,7 @@ describe("render smoke tests", () => {
 		});
 		const html = renderToStaticMarkup(<AnsweredCard answer={answer} />);
 		assert.ok(html.includes('data-testid="your-thinking"'), "the thinking row exists");
-		assert.match(html, /YOUR THINKING/, "labeled as the learner's voice (all caps, owner round 3)");
+		assert.match(html, /你的(?:解题思路|想法)/, "labeled as the learner's voice (all caps, owner round 3)");
 		// COLLAPSED ARRIVAL (owner round 2, 2026-10-05): the SSR output is the
 		// trigger row only — the thinking text is one click away, never loud.
 		assert.ok(html.includes('data-testid="your-thinking-trigger"'), "the trigger row");
@@ -440,9 +440,9 @@ describe("teach-check reveal (W5 phase separation)", () => {
 				/>,
 		);
 		assert.ok(html.includes('data-testid="teach-check-reveal"'), "invitation affordance present");
-		assert.match(html, /Check your understanding/);
+		assert.match(html, /检查一下理解/);
 		assert.match(html, /Which planet is closest/, "question teaser invites, not minimizes");
-		assert.match(html, /Open/, "a clear reveal action");
+		assert.match(html, /展开/, "a clear reveal action");
 	});
 
 	it("probe questions keep the plain collapsed bar (no invitation copy)", () => {
@@ -457,8 +457,8 @@ describe("teach-check reveal (W5 phase separation)", () => {
 				/>,
 		);
 		assert.ok(html.includes('data-testid="question-dock-bar"'), "the scroll-collapse strip");
-		assert.ok(!html.includes("Check your understanding"), "no invitation copy outside teach phase");
-		assert.match(html, /Answer/, "the strip keeps its Answer affordance");
+		assert.ok(!html.includes("检查一下理解"), "no invitation copy outside teach phase");
+		assert.match(html, /作答/, "the strip keeps its Answer affordance");
 	});
 
 	it("after the reveal, the teach check renders the full form (probe default, unchanged)", () => {
@@ -466,7 +466,7 @@ describe("teach-check reveal (W5 phase separation)", () => {
 		// path renders the identical form; this is also the regression pin for it.
 		const html = renderDock({ toolName: "quiz", toolCallId: "t1", input: quizInput as never });
 		assert.ok(html.includes('data-testid="question-dock"'), "the form is the dock's content once expanded");
-		assert.match(html, /Submit answer/);
+		assert.match(html, /提交回答/);
 	});
 });
 
@@ -572,14 +572,14 @@ describe("AnsweredCard: the explain variant", () => {
 describe("probe-phase naming: Probe/Recall labels", () => {
 	it("the dock labels a probe quiz as Probe (composer surface)", () => {
 		const html = renderDock({ toolName: "probe", toolCallId: "p1", input: quizInput as never });
-		assert.match(html, /Probe/, "the chip carries the tool's own name");
+		assert.match(html, /了解基础/, "the chip carries the tool's own name");
 		assert.ok(!html.includes(">Quiz<"), "not the teach label");
 		assert.match(html, /Which planet is closest to the sun\?/, "still a quiz-shaped card");
 	});
 
 	it("the dock labels a recall question as Recall", () => {
 		const html = renderDock({ toolName: "recall", toolCallId: "r1", input: { question: "Explain the chain rule.", correctAnswer: "Outer function times the derivative of the inner." } as never });
-		assert.match(html, /Recall/);
+		assert.match(html, /回忆练习/);
 		assert.ok(!html.includes(">Explain<"), "not the teach label");
 	});
 
@@ -596,7 +596,7 @@ describe("probe-phase naming: Probe/Recall labels", () => {
 			createdAt: new Date().toISOString(),
 		};
 		const html = renderToStaticMarkup(<AnsweredCard answer={buildAnswer(qd, { values: ["mercury"] }, "probe")} />);
-		assert.match(html, /Probe/);
+		assert.match(html, /了解基础/);
 		assert.ok(!html.includes(">Quiz<"), "not the teach label");
 	});
 
@@ -611,7 +611,7 @@ describe("probe-phase naming: Probe/Recall labels", () => {
 			createdAt: new Date().toISOString(),
 		};
 		const html = renderToStaticMarkup(<AnsweredCard answer={buildAnswer(recallQD, { text: "A hand-wave." }, "recall")} />);
-		assert.match(html, /Recall/);
+		assert.match(html, /回忆练习/);
 		assert.ok(!html.includes(">Explain<"), "not the teach label");
 	});
 
@@ -649,7 +649,7 @@ describe("predict vs check rendering", () => {
 				onSubmit={() => {}}
 			/>,
 		);
-		assert.ok(html.includes("Prediction"), `eyebrow missing: ${html.slice(0, 200)}`);
+		assert.ok(html.includes("先做预测"), `eyebrow missing: ${html.slice(0, 200)}`);
 	});
 
 	it("a check quiz reads the 'Check' eyebrow — the type name IS the label (owner, 2026-10-09)", () => {
@@ -665,7 +665,7 @@ describe("predict vs check rendering", () => {
 				onSubmit={() => {}}
 			/>,
 		);
-		assert.ok(html.includes("Check"), "the chip carries the question's type");
+		assert.ok(html.includes("理解检查"), "the chip carries the question's type");
 		assert.ok(!html.includes(">Quiz<"), "the generic label is retired");
 	});
 
@@ -673,8 +673,8 @@ describe("predict vs check rendering", () => {
 		const qd: QuestionData = { ...quizQD(), questionType: "predict" };
 		const answer = buildAnswer(qd, { values: ["Venus"] }); // wrong on purpose
 		const html = renderToStaticMarkup(<AnsweredCard answer={answer} />);
-		assert.ok(html.includes("Prediction"), "the eyebrow distinguishes the card");
-		assert.ok(/incorrect|wrong|&times;|✗/i.test(html), "the verdict still shows (owner: predictions are graded)");
+		assert.ok(html.includes("先做预测"), "the eyebrow distinguishes the card");
+		assert.ok(/再想一想|wrong|&times;|✗/i.test(html), "the verdict still shows (owner: predictions are graded)");
 		assert.ok(!html.includes("Why:"), "the explanation is not center stage");
 		assert.ok(html.includes("tucked-explanation"), "it sits behind the toggle");
 	});
@@ -700,7 +700,7 @@ describe("predict vs check rendering", () => {
 		const cardAt = html.indexOf("answered-card");
 		assert.ok(blockAt !== -1, "the lifted block renders");
 		assert.ok(blockAt < cardAt, "it sits ABOVE the answered card");
-		assert.ok(html.includes("YOUR THINKING"), "the plain label");
+		assert.ok(html.includes("你的想法"), "the plain label");
 		assert.ok(!html.includes("Your thinking while reading"), "the old verbose label is gone");
 		assert.ok(!html.includes("your-reading-thinking"), "the in-card inset is gone");
 		// EXPANDED ARRIVAL (owner round two, 2026-10-07): transcript rows

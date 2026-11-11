@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { createContext, Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useChatSession } from "@/components/session";
 import { visibleQueuedSteers } from "@/components/session-core";
@@ -94,7 +95,7 @@ import { currentUserThinkingOpen, setAllUserThinkingOpen } from "@/components/th
  * deliberately narrower (~46rem centered) per the reference. Same ELEMENT,
  * same place — width polish only.
  */
-const COLUMN = "mx-auto w-full max-w-none px-6";
+const COLUMN = "lh-lesson-column mx-auto w-full max-w-[64rem] px-6";
 const DOCK = "mx-auto w-full max-w-[46rem] px-4";
 // The DOCK container's fixed width (46rem) and the plan marginalia's
 // geometry (owner, plan-placement round): the bare diagram sits in the
@@ -508,7 +509,7 @@ export function Chat({
 
 	// Teach-phase check (W5, vision §2): a pending QUIZ that lands once a
 	// plan node is OCCUPIED (phaseAt3 "teach") starts collapsed behind a
-	// "Check your understanding" reveal button; probe- and plan-phase
+	// "检查一下理解" reveal button; probe- and plan-phase
 	// questions auto-open as today. Both teach quizzing tools obey the
 	// law (owner, 2026-10-09: explain checks join quiz checks behind the
 	// reveal); predictions of either mechanic and ask always arrive open.
@@ -516,6 +517,7 @@ export function Chat({
 	// ends at the question call), so the session's current phase IS the
 	// question's phase.
 	const requiresReveal = pending !== null && questionNeedsReveal(pending.tool, pending.input, phaseAt3(messages));
+	const [exerciseTarget, setExerciseTarget] = useState<HTMLDivElement | null>(null);
 
 	/* The READING-THINKING channel (owner 2026-10-03): a draft field for
 	 * thinking while reading the teaching prose, mounted while a check waits
@@ -1277,7 +1279,7 @@ export function Chat({
 		    chip) spans from the left sidebar's edge to the panel's edge. The
 		    dock overlays the column bottom (outside the scroller); a spacer in
 		    the transcript reserves its height. */}
-		<div className="flex h-dvh">
+		<div className="lh-workspace lh-book-workspace flex h-dvh">
 			<div className="flex min-w-0 flex-1 flex-col">
 				{/* The top bar is its own block (owner, top-fade round 4): in flow
 				    above the scroller on the plain page background — no gradient. Its
@@ -1320,8 +1322,8 @@ export function Chat({
 								}}
 								onBlur={() => void commitRename(titleDraft)}
 								spellCheck={false}
-								aria-label="Session title"
-								title="Rename this session"
+								aria-label="课程名称"
+								title="重命名课程"
 								className="lh-no-drag min-w-[8ch] max-w-[70%] shrink-0 bg-transparent font-title text-3xl tracking-tight caret-current outline-none [field-sizing:content]"
 							/>
 							{/* flex-1 spacer during rename too, so the chips stay at
@@ -1333,7 +1335,7 @@ export function Chat({
 					<>
 						<Hint
 							// F2 renames (registry) — surfaced on the hover.
-							label="Rename session"
+							label="重命名课程"
 							action="rename-session"
 							side="bottom"
 						>
@@ -1357,7 +1359,7 @@ export function Chat({
 					    structure beside the phase chip — access to the full-DAG popup
 					    at every width; the marginalia is the wide-screen glance view. */}
 					{planTree && (
-						<Hint label="Open the full plan" side="bottom">
+						<Hint label="查看学习计划" side="bottom">
 <button
 							type="button"
 							data-testid="plan-chip"
@@ -1368,7 +1370,7 @@ export function Chat({
 							className="lh-no-drag flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border/80 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:border-border hover:text-foreground"
 						>
 							<WaypointsIcon className="size-3.5 text-primary" aria-hidden />
-							Plan
+							学习计划
 						</button>
 </Hint>
 					)}
@@ -1390,7 +1392,7 @@ export function Chat({
 							className="pointer-events-none flex shrink-0 select-none items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground"
 						>
 							<DumbbellIcon className="size-3" />
-							Practice
+							练习
 						</span>
 					) : (
 						<PhaseChip phase={phases.at(-1) ?? "probe"} />
@@ -1399,14 +1401,15 @@ export function Chat({
 
 				<SessionFind scopeRef={sessionFindScopeRef} scrollContextRef={scrollContextRef} />
 				<div ref={sessionFindScopeRef} className="relative flex min-h-0 flex-1">
-				<Conversation className="h-full min-w-0 flex-1" initial="instant" contextRef={scrollContextRef}>
+				<Conversation className="lh-conversation lh-book-conversation h-full min-w-0 flex-1" initial="instant" contextRef={scrollContextRef}>
 					<SessionMessageNavigation />
 					<ConversationContent className="min-h-full gap-0 p-0">
 						<div data-session-find-root="" className={`${COLUMN} flex flex-1 flex-col gap-4 pt-4`}>
+							<h1 className="lh-book-title">{titleText}</h1>
 							{messages.length === 0 && !busy && (
 								<ConversationEmptyState
-									title="New session"
-									description="The teacher will open by probing what you already know."
+									title="开始学习"
+									description="从一个问题开始，老师会先了解你已经掌握的内容。"
 								/>
 							)}
 
@@ -1457,7 +1460,7 @@ export function Chat({
 														className="my-4 flex items-center justify-center gap-1.5 font-ui text-xs font-medium uppercase tracking-wide text-muted-foreground"
 													>
 														<ArrowRightIcon className="size-3" />
-														Next problem
+														下一题
 													</div>
 												);
 											default:
@@ -1653,13 +1656,13 @@ export function Chat({
 						    BEFORE beginTurn; the settle kick runs after endTurn). */}
 							{compacting && (
 								<span className="flex items-center gap-2 font-ui text-xs font-medium uppercase tracking-wide text-muted-foreground">
-									<BrailleSpinner label="Compacting context" />
+									<BrailleSpinner label="正在整理上下文" />
 									<Shimmer duration={1}>COMPACTING CONTEXT…</Shimmer>
 								</span>
 							)}
 							{(status === "submitted" || turnInFlight) && (
 								<span className="flex items-center gap-2 font-ui text-xs font-medium uppercase tracking-wide text-muted-foreground">
-									<BrailleSpinner label="Thinking" />
+									<BrailleSpinner label="正在思考" />
 									<Shimmer duration={1}>
 										THINKING…
 									</Shimmer>
@@ -1678,6 +1681,7 @@ export function Chat({
 							)}
 						</div>
 
+						<div ref={setExerciseTarget} className={`${COLUMN} lh-exercise-target`} />
 						{/* The dock's reserved tail (DockOverlay reports its height):
 						    keeps at-rest transcript content scrolling fully clear of
 						    the overlay — the flow-space replacement for the old
@@ -1692,6 +1696,8 @@ export function Chat({
 				    height morph (typing, a question growing the band, the
 				    fold) and NEVER overlaps the composer. */}
 				<DockOverlay
+					inlineQuestion={!!pending}
+					exerciseTarget={exerciseTarget}
 					pending={pending}
 					initialQuestionDraft={pending ? questionDraft(pending.key)?.form : undefined}
 					onSaveQuestionDraft={(form) => { if (pending) saveQuestionDraft(pending.key, { form }); }}
@@ -1703,7 +1709,7 @@ export function Chat({
 					plan={hasPlan ? <PlanMarginalia messages={messages} /> : undefined}
 					onOpenPlan={() => setPlanOpen(true)}
 					requiresReveal={requiresReveal}
-					readingThinking={readingThinkingSeed.value}
+					readingThinking={readingThinkingRef.current}
 					readingThinkingRevision={readingThinkingSeed.revision}
 					onReadingThinking={applyReadingThinking}
 					phase={phases.at(-1) ?? "probe"}
@@ -1926,6 +1932,8 @@ export function shouldStampGeometryMute(nextH: number, prevH: number, pending: b
 }
 
 function DockOverlay({
+	inlineQuestion,
+	exerciseTarget,
 	pending,
 	initialQuestionDraft,
 	onSaveQuestionDraft,
@@ -1953,6 +1961,8 @@ function DockOverlay({
 	setupCta,
 	queuedSteers,
 }: {
+	inlineQuestion: boolean;
+	exerciseTarget: HTMLDivElement | null;
 	pending: ReturnType<typeof pendingQuestionOf>;
 	initialQuestionDraft?: QuestionFormDraft;
 	onSaveQuestionDraft: (draft: QuestionFormDraft) => void;
@@ -2019,7 +2029,8 @@ function DockOverlay({
 	// learner reads the teaching first and opens the check when ready. Once
 	// revealed, the normal collapse machine rules apply untouched.
 	const [revealed, setRevealed] = useState(false);
-	const revealPending = requiresReveal && !revealed;
+	const revealPending = !inlineQuestion && requiresReveal && !revealed;
+	const displayExpanded = inlineQuestion || expanded;
 
 	const pendingId = pending?.key ?? null;
 	const initialPendingRef = useRef(pendingId);
@@ -2132,6 +2143,11 @@ function DockOverlay({
 	// learner back to the bottom. Composer mode may give space back.
 	const reserveRef = useRef(0);
 	const offer = useCallback((blockH: number) => {
+		if (inlineQuestion) {
+			reserveRef.current = 0;
+			onReserve(0);
+			return;
+		}
 		const next = blockH + GRADIENT_H;
 		if (next <= reserveRef.current + 0.5 && pendingRef.current) return;
 		// Stamp growth at the source, including child-only field resizes, so
@@ -2139,7 +2155,7 @@ function DockOverlay({
 		if (shouldStampGeometryMute(next, reserveRef.current, pendingRef.current)) geometryAtRef.current = Date.now();
 		reserveRef.current = next;
 		onReserve(next);
-	}, [onReserve]);
+	}, [onReserve, inlineQuestion]);
 
 	// The overlay must not paint over the scroller's scrollbar (owner, scroll
 	// round 2): the scroller reserves symmetric gutters (scrollbar-gutter:
@@ -2152,7 +2168,7 @@ function DockOverlay({
 	const [sbInset, setSbInset] = useState(0);
 	useDockHeight({
 		scrollRef, blockRef, viewportRef, bodyRef, shellRef, contentRef,
-		expanded, enabled: !!pending || !!practice, mode, onScrollbarInset: setSbInset, onHeight: offer,
+		expanded: displayExpanded, enabled: !inlineQuestion && (!!pending || !!practice), mode, onScrollbarInset: setSbInset, onHeight: offer,
 	});
 
 	// GROWTH MUTE (owner round, 2026-10-05 — the generation churn): during a
@@ -2188,11 +2204,11 @@ function DockOverlay({
 	useEffect(() => {
 		const root = blockRef.current;
 		const el = scrollRef.current;
-		if (!root || !el) return;
+		if (!root || !el || inlineQuestion) return;
 		const onWheel = (e: WheelEvent) => forwardDockWheel(e, root, el);
 		root.addEventListener("wheel", onWheel, { passive: false });
 		return () => root.removeEventListener("wheel", onWheel);
-	}, [scrollRef]);
+	}, [scrollRef, inlineQuestion]);
 
 	// Explicit expand (bar click): the smooth scroll to the bottom takes
 	// hundreds of ms, during which the position is still legitimately inside
@@ -2233,7 +2249,7 @@ function DockOverlay({
 	// a focused button activates natively) — this listener claims only
 	// the dead case: plain focus with Enter doing nothing.
 	useEffect(() => {
-		if (!pending || expanded) return;
+		if (!pending || displayExpanded) return;
 		const onKeyDown = (e: KeyboardEvent) => {
 			if (e.key !== "Enter" || e.altKey) return;
 			if (e.shiftKey && !e.metaKey && !e.ctrlKey) return;
@@ -2253,13 +2269,13 @@ function DockOverlay({
 		};
 		document.addEventListener("keydown", onKeyDown);
 		return () => document.removeEventListener("keydown", onKeyDown);
-	}, [pending, expanded]);
+	}, [pending, displayExpanded]);
 
 	useEffect(() => {
 		const el = scrollRef.current;
 		if (!el) return;
 		const onScroll = () => {
-			if (!pendingRef.current) return;
+			if (!pendingRef.current || inlineQuestion) return;
 			// Resize mute (owner, resize round): a geometry change re-clamps
 			// scrollTop and the browser emits the clamp as a scroll event —
 			// reading the transient position folded the box to the bar for a
@@ -2285,7 +2301,7 @@ function DockOverlay({
 		};
 		el.addEventListener("scroll", onScroll, { passive: true });
 		return () => el.removeEventListener("scroll", onScroll);
-	}, [scrollRef, scrollToBottom]);
+	}, [scrollRef, scrollToBottom, inlineQuestion]);
 
 	// The settled block height (gradient excluded), offered to the spacer.
 	// Only ever called with NATURAL heights — never the animated mid-morph
@@ -2323,6 +2339,7 @@ function DockOverlay({
 	useIsoLayoutEffect(() => {
 		const el = shellRef.current;
 		if (!el) return;
+		if (inlineQuestion) { el.getAnimations().forEach((a) => a.cancel()); return; }
 		const p = prevRef.current;
 		if (p && p.key === stateKey) {
 			// Same variant: keep the settled height fresh, but never measure while
@@ -2349,11 +2366,11 @@ function DockOverlay({
 		prevRef.current = { key: stateKey, height: h };
 	});
 
-	return (
-		<div className="pointer-events-none absolute inset-x-0 bottom-0" style={{ right: sbInset }}>
+	const dock = (
+		<div className={`lh-dock-overlay pointer-events-none absolute inset-x-0 bottom-0 ${inlineQuestion ? "lh-inline-exercise" : ""}`} style={{ right: inlineQuestion ? 0 : sbInset }}>
 			<div className="h-24 bg-gradient-to-t from-background via-background/85 to-transparent" />
-			<div ref={blockRef} className="relative bg-background pb-5">
-				<div className={DOCK}>
+			<div ref={blockRef} className="lh-dock-block relative bg-background pb-5">
+				<div className={`lh-dock-column ${DOCK}`}>
 					<div ref={viewportRef} data-dock-viewport="" className="pointer-events-auto">
 					<div ref={bodyRef}>
 					{setupCta}
@@ -2367,13 +2384,14 @@ function DockOverlay({
 					    claims dictated speech until the learner reveals the check
 					    (the dock reclaims then). Rides the check answer on submit. */}
 					{pending && requiresReveal && (
+						<details className="lh-reading-disclosure"><summary>阅读随想<span>记录疑问或联想，随答案一起提交</span></summary>
 						<ReadingThinkingField
 							value={readingThinking}
 							revision={readingThinkingRevision}
 							onChange={onReadingThinking}
 							onEscape={dictationCancel}
 							onOpen={
-								!expanded
+								!displayExpanded
 									? () => {
 											void finishDictation().then(() => {
 												expandAndRevealRef.current();
@@ -2383,6 +2401,7 @@ function DockOverlay({
 							}
 							claim={revealPending}
 						/>
+						</details>
 					)}
 					<div ref={shellRef} data-attachment-composer="" className="pointer-events-auto overflow-hidden rounded-2xl border bg-card shadow-lg">
 						{/* Include descendant margins (notably practice thinking's
@@ -2397,7 +2416,7 @@ function DockOverlay({
 									toolName={pending.tool as "quiz" | "probe" | "ask_user_question" | "explain" | "recall"}
 									toolCallId={pending.toolCallId}
 									input={pending.input as never}
-									expanded={expanded}
+									expanded={displayExpanded}
 									reveal={revealPending}
 									phase={phase}
 									onExpand={expandAndReveal}
@@ -2412,7 +2431,7 @@ function DockOverlay({
 								<PracticeDock
 									problemCallId={practice.toolCallId}
 									input={practice.input as { statement: string }}
-									expanded={expanded}
+									expanded={displayExpanded}
 									onExpand={() => {
 										setExpanded(true);
 										void suppressFoldDuringReveal();
@@ -2451,7 +2470,7 @@ function DockOverlay({
 					    overlay is none by default. The isAtBottom/scrollToBottom
 					    context still reaches it — DockOverlay is a Conversation
 					    child. */}
-					<ConversationScrollButton className="pointer-events-auto bottom-full mb-2" />
+					{!inlineQuestion && <ConversationScrollButton className="pointer-events-auto bottom-full mb-2" />}
 				</div>
 				{/* The plan marginalia (owner, plan-placement round): the bare
 				    diagram in the band's right flank — boundaless, meet-fitted, part
@@ -2463,8 +2482,8 @@ function DockOverlay({
 				    the flank; below MARGIN_MIN_W it FADES (never pops away — no
 				    mid-question unmount), and widening past the floor fades it
 				    back in. */}
-				{pending && plan && (
-					<Hint label="Open the full plan" side="bottom">
+				{pending && plan && !inlineQuestion && (
+					<Hint label="查看学习计划" side="bottom">
 <button
 						type="button"
 						data-testid="plan-marginalia"
@@ -2483,4 +2502,5 @@ function DockOverlay({
 			</div>
 		</div>
 	);
+	return inlineQuestion && exerciseTarget ? createPortal(dock, exerciseTarget) : dock;
 }

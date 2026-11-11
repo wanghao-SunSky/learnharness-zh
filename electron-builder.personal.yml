@@ -1,0 +1,13 @@
+extends: ./electron-builder.yml
+appId: local.learnharness.personal
+productName: LearnHarness Personal
+directories:
+  output: dist-personal
+mac:
+  icon: build/icon.icns
+  identity: null
+  notarize: false
+  electronLanguages:
+    - en
+    - zh_CN
+publish: null

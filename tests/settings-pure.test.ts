@@ -26,12 +26,12 @@ import { setupStage } from "../components/setup-dialog.tsx";
 describe("resolveAppearance — delta over factory", () => {
 	it("absent everything = the factory view", () => {
 		const a = resolveAppearance(undefined);
-		assert.equal(a.mode, "dark");
+		assert.equal(a.mode, "light");
 		assert.equal(a.background, null);
 		assert.equal(a.fontFamily, null);
-		assert.equal(a.proseFontSize, 16);
-		assert.equal(a.sessionNameSerif, true);
-		assert.deepEqual(a.mdRendering, { headingWeight: 900, boldColor: null, italicColor: null });
+		assert.equal(a.proseFontSize, 17);
+		assert.equal(a.sessionNameSerif, false);
+		assert.deepEqual(a.mdRendering, { headingWeight: 600, boldColor: null, italicColor: null });
 	});
 
 	it("explicit deltas win field-by-field", () => {
@@ -53,7 +53,6 @@ describe("derivedPalette — the dark curve keeps today's relationships", () => 
 			"--accent": "#2a2a2a",
 			"--border": "#434343",
 			"--input": "#434343",
-			"--primary-foreground": "#141414",
 		});
 	});
 
@@ -72,10 +71,10 @@ describe("derivedPalette — the dark curve keeps today's relationships", () => 
 describe("appearanceVars — the mapping the provider applies", () => {
 	it("factory appearance: only the always-applied tokens move", () => {
 		const vars = appearanceVars(resolveAppearance(undefined));
-		assert.equal(vars["--lh-prose-size"], "16px");
-		assert.equal(vars["--lh-heading-weight"], "900");
+		assert.equal(vars["--lh-prose-size"], "17px");
+		assert.equal(vars["--lh-heading-weight"], "600");
 		assert.equal(vars["--font-prose"], undefined, "no font override at factory");
-		assert.equal(vars["--font-title"], undefined, "CMU stays");
+		assert.equal(vars["--font-title"], "var(--font-prose)", "Chinese titles follow prose");
 		assert.equal(vars["--background"], undefined, "factory palette untouched");
 		assert.equal(vars["--lh-ink-strong"], undefined, "default ink");
 	});
@@ -83,6 +82,7 @@ describe("appearanceVars — the mapping the provider applies", () => {
 	it("full delta: every knob lands on its token", () => {
 		const vars = appearanceVars(
 			resolveAppearance({
+				mode: "dark",
 				background: "#101820",
 				fontFamily: "Georgia",
 				proseFontSize: 18,
@@ -103,7 +103,7 @@ describe("appearanceVars — the mapping the provider applies", () => {
 	it("sessionNameSerif false alone: titles move, nothing else does", () => {
 		const vars = appearanceVars(resolveAppearance({ sessionNameSerif: false }));
 		assert.equal(vars["--font-title"], "var(--font-prose)");
-		assert.equal(Object.keys(vars).length, 3, "prose-size, heading-weight, font-title only");
+		assert.equal(Object.keys(vars).length, 4, "prose-size, heading-weight, font-title only");
 	});
 });
 
@@ -111,6 +111,7 @@ describe("staleVarNames — the removal half of application (owner repro: resets
 	it("a full delta applied, then factory: every delta-only name goes stale", () => {
 		const fullDelta = appearanceVars(
 			resolveAppearance({
+				mode: "dark",
 				background: "#101820",
 				fontFamily: "Georgia",
 				sessionNameSerif: false,
@@ -118,7 +119,7 @@ describe("staleVarNames — the removal half of application (owner repro: resets
 			}),
 		);
 		const applied = Object.keys(fullDelta);
-		const factory = appearanceVars(resolveAppearance(undefined));
+		const factory = appearanceVars(resolveAppearance({ sessionNameSerif: true }));
 		const stale = staleVarNames(applied, factory);
 		assert.ok(stale.includes("--background"));
 		assert.ok(stale.includes("--font-prose"));

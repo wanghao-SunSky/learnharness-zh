@@ -10,6 +10,7 @@ SCOPE.md
 # raw real-data import sources (user directive 2026-09-13: never commit)
 real-data-extraction/
 dist/
+dist-personal/
 
 # dev auth/keys store (auth-keys wave): repo-root auth.json — secrets never committed
 auth.json
@@ -19,3 +20,12 @@ xai-credentials.json*
 
 # dev-fresh launcher scratch (fresh-user sim): disposable per launch
 .fresh-data/
+
+/acp/node_modules/
+
+# Local-only records and credentials
+.env
+.env.*
+!.env.example
+/acp/sessions/
+/docs/preview/

@@ -170,11 +170,11 @@ export function DraftShell({
 						<Conversation className="h-full min-w-0 flex-1" initial="instant">
 							<ConversationContent className="min-h-full gap-0 p-0">
 								<ConversationEmptyState
-									title={mode === "practice" ? "New practice session" : "New session"}
+									title={mode === "practice" ? "开始练习" : "开始学习"}
 									description={
 										mode === "practice"
-											? "Pick nodes from your knowledge graph, describe what you want to practice, or bring your own problem."
-											: "The teacher will open by probing what you already know."
+											? "选择知识点、描述想练习的内容，或带来一道自己的题目。"
+											: "从一个问题开始，老师会先了解你已经掌握的内容。"
 									}
 								/>
 							</ConversationContent>
@@ -204,7 +204,7 @@ export function DraftShell({
 										// input (owner refinement round, 2026-09-24) — no lesson has
 										// started yet, so the composer must not read like one is in
 										// flight.
-										placeholder={mode === "practice" ? "What do you want to practice?" : "What do you want to learn?"}
+										placeholder={mode === "practice" ? "今天想练习什么？" : "今天想学什么？"}
 									/>
 								</div>
 								<StatsBar

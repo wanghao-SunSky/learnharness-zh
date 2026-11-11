@@ -51,9 +51,9 @@ export function AnsweredCard({ answer: savedAnswer, input }: { answer: QuestionA
 		    captured while reading are chronologically PRIOR to the question —
 		    rendered as its own user-side block ABOVE the card, the unified
 		    ThinkingBlock, instead of an inset inside the answer. Same muted
-		    rail as before; the label is now plain "Your thinking". */}
+		    rail as before; the label is now plain "你的解题思路". */}
 		{answer.readingThinking && (
-			<ThinkingBlock testId="reading-thinking-block" label="YOUR THINKING" text={answer.readingThinking} defaultOpen />
+			<ThinkingBlock testId="reading-thinking-block" label="你的想法" text={answer.readingThinking} defaultOpen />
 		)}
 		{/* [&>*:last-child]:mb-0 (owner round, 2026-10-07): on ask cards the
 		    thinking row is the last child — its my-3 stacked with the card's
@@ -68,23 +68,23 @@ export function AnsweredCard({ answer: savedAnswer, input }: { answer: QuestionA
 			    cards label Probe/Recall — the phase boundary visible in the
 			    transcript. No `tool` on old records: kind labels as before. */}
 				{answer.tool === "probe"
-					? "Probe"
+					? "了解基础"
 					: answer.tool === "recall"
-						? "Recall"
+						? "回忆练习"
 						: isQuiz
 								? answer.questionType === "predict"
-									? "Prediction"
-									: "Check"
+									? "先做预测"
+									: "理解检查"
 									: isExplain
-										? "Explain"
-											: "Question"}
+										? "用自己的话解释"
+											: "问题"}
 				{isQuiz &&
 					(answer.dontKnow ? (
-						<span className="rounded bg-muted px-1.5 py-0.5">didn't know</span>
+						<span className="rounded bg-muted px-1.5 py-0.5">暂时不知道</span>
 					) : answer.correct ? (
-						<span className="rounded bg-green-500/15 px-1.5 py-0.5 text-green-500">correct</span>
+						<span className="rounded bg-green-500/15 px-1.5 py-0.5 text-green-800 dark:text-green-300">回答正确</span>
 					) : (
-						<span className="rounded bg-red-500/15 px-1.5 py-0.5 text-red-500">incorrect</span>
+						<span className="rounded bg-red-500/15 px-1.5 py-0.5 text-red-800 dark:text-red-300">再想一想</span>
 					))}
 			</div>
 			<div className="mb-3 font-medium">
@@ -122,9 +122,9 @@ export function AnsweredCard({ answer: savedAnswer, input }: { answer: QuestionA
 										data-mark={sel && key ? "check" : sel && !key ? "x" : !sel && key ? "check" : undefined}
 										className={cn(
 											"flex shrink-0 items-center",
-											sel && key && "text-green-500",
-											sel && !key && "text-red-500",
-											!sel && key && "text-green-500",
+											sel && key && "text-green-800 dark:text-green-300",
+											sel && !key && "text-red-800 dark:text-red-300",
+											!sel && key && "text-green-800 dark:text-green-300",
 										)}
 									>
 										{/* Owner round 8: a touch smaller than the text (size-4→size-3.5,
@@ -188,13 +188,13 @@ export function AnsweredCard({ answer: savedAnswer, input }: { answer: QuestionA
 				    the accent lift read too light); rail only, heights identical. */
 				<ThinkingBlock
 					testId="your-thinking"
-					label="YOUR THINKING"
+					label="你的想法"
 					text={answer.thinking ?? answer.note ?? ""}
 					inCard
 				/>
 			)}
 
-			{/* px-3→removed: card p-4 + box px-3 double-inset sat the "Why" label deeper
+			{/* px-3→removed: card p-4 + box px-3 double-inset sat the "查看解析" label deeper
 			    than the option box edges (owner, round 3). Sides flush with everything
 			    else; py-2 stays for vertical air. */}
 			{isQuiz && answer.explanation && (
@@ -208,11 +208,11 @@ export function AnsweredCard({ answer: savedAnswer, input }: { answer: QuestionA
 						onClick={() => setWhyOpen((v) => !v)}
 						className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
 					>
-						{whyOpen ? "Hide why" : "Why"}
+						{whyOpen ? "收起解析" : "查看解析"}
 					</button>
 					{whyOpen && (
 						<div className="mt-1.5 rounded-lg bg-muted py-2 text-sm text-foreground/50">
-							<span className="font-medium text-muted-foreground">Why: </span>
+							<span className="font-medium text-muted-foreground">解析：</span>
 							{/* Keep the first paragraph beside the label, not every paragraph:
 							   later paragraphs must retain their recovered document structure. */}
 							<ToolContentResponse className="inline [&>p:first-child]:inline [&>p:first-child]:m-0">{answer.explanation}</ToolContentResponse>

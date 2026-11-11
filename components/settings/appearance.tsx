@@ -47,17 +47,18 @@ function raise(hex: string, add: number): string {
 	const n = hex.length === 4
 		? hex.slice(1).split("").map((c) => parseInt(c + c, 16))
 		: [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
-	return `#${n.map((c) => Math.min(255, c + add).toString(16).padStart(2, "0")).join("")}`;
+	return `#${n.map((c) => Math.max(0, Math.min(255, c + add)).toString(16).padStart(2, "0")).join("")}`;
 }
 
 /** The derived palette a chosen background implies (dark curve): background
  *  itself, the raised surfaces (card/popover/secondary/muted, +8), the
  *  accent (+22), the edges (border/input, +47), and primary-foreground
  *  (the inverted text on primary = the background's own color, as today). */
-export function derivedPalette(background: string): Record<string, string> {
-	const card = raise(background, 8);
-	const accent = raise(background, 22);
-	const border = raise(background, 47);
+export function derivedPalette(background: string, mode: "light" | "dark" = "dark"): Record<string, string> {
+	const direction = mode === "light" ? -1 : 1;
+	const card = raise(background, 8 * direction);
+	const accent = raise(background, 22 * direction);
+	const border = raise(background, 47 * direction);
 	return {
 		"--background": background,
 		"--card": card,
@@ -67,7 +68,6 @@ export function derivedPalette(background: string): Record<string, string> {
 		"--accent": accent,
 		"--border": border,
 		"--input": border,
-		"--primary-foreground": background,
 	};
 }
 
@@ -75,8 +75,8 @@ export function derivedPalette(background: string): Record<string, string> {
  *  Absent entries = leave the factory stylesheet value in place. Pure —
  *  exported for tests. */
 export function appearanceVars(a: ReturnType<typeof resolveAppearance>): Record<string, string> {
-	const vars: Record<string, string> = {};
-	if (a.background !== null) Object.assign(vars, derivedPalette(a.background));
+	const vars: Record<string, string> = { "color-scheme": a.mode };
+	if (a.background !== null) Object.assign(vars, derivedPalette(a.background, a.mode));
 	if (a.fontFamily !== null) {
 		vars["--font-prose"] = `"${a.fontFamily}", var(--font-sans3), ui-sans-serif, system-ui, sans-serif`;
 	}
@@ -141,6 +141,7 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
 		if (appliedRef.current === key) return;
 		appliedRef.current = key;
 		const root = document.documentElement;
+		root.classList.toggle("dark", vars["color-scheme"] === "dark");
 		for (const name of staleVarNames([...appliedNamesRef.current], vars)) {
 			root.style.removeProperty(name);
 			appliedNamesRef.current.delete(name);

@@ -73,8 +73,8 @@ export function KnowledgeSummary({
 			</p>
 			{empty && (
 				<div className="pt-2 font-ui text-xs text-muted-foreground/70">
-					<p>Start a session to begin learning.</p>
-					<p className="mt-1">Attach your material with the paperclip or drag and drop.</p>
+					<p>开始一节课，让知识逐渐连成体系。</p>
+					<p className="mt-1">点击回形针或拖入资料，带着你的材料开始。</p>
 				</div>
 			)}
 		</div>
@@ -165,7 +165,7 @@ export function MinimalHome({
 								className="flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
 							>
 								<ListTreeIcon className="size-3" />
-								Chains
+								知识脉络
 							</button>
 						</Hint>
 					</div>

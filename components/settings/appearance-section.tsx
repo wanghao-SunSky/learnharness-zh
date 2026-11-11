@@ -45,7 +45,7 @@ import { CommitInput, SettingsMenuTrigger, SettingsRow, ThinSelect, Toggle } fro
 
 /** The factory reading family — the DEFAULT row's identity (unset =
  *  this). Exported for tests. */
-export const DEFAULT_READING_FONT = "Source Sans 3";
+export const DEFAULT_READING_FONT = "Songti SC";
 
 /** The dev-browser fallback list (queryLocalFonts is absent there):
  *  the app's own knowns plus a handful of ubiquitous macOS families,
@@ -53,6 +53,8 @@ export const DEFAULT_READING_FONT = "Source Sans 3";
  *  list. The factory family is absent: the DEFAULT row is it. Exported
  *  for tests. */
 export const CURATED_FALLBACK_FONTS: readonly string[] = [
+	"PingFang SC",
+	"Songti SC",
 	"Arial",
 	"CMU Serif",
 	"Courier New",
@@ -186,26 +188,27 @@ export function AppearanceSection({
 
 	return (
 		<>
-			<SettingsRow label="Mode" hint="Coming soon" testid="row-mode" dimmed>
-				<ThinSelect value="dark" ariaLabel="mode" onChange={() => {}} testid="select-mode" disabled>
-					<option value="dark">Dark</option>
+			<SettingsRow label="配色" hint="书刊浅色或柔和深色" testid="row-mode">
+				<ThinSelect value={resolved.mode} ariaLabel="配色" onChange={(value) => onSectionChange({ ...appearance, mode: value as "light" | "dark", background: null })} testid="select-mode">
+					<option value="light">书刊浅色</option>
+					<option value="dark">柔和深色</option>
 				</ThinSelect>
 			</SettingsRow>
 			<SettingsRow
-				label="Background"
-				hint={`Empty = ${resolved.background ?? "#141414"}`}
+				label="背景颜色"
+				hint="留空则使用当前主题默认颜色"
 				testid="row-background"
 			>
 				<CommitInput
 					value={appearance?.background ?? ""}
-					placeholder="#141414"
+					placeholder={resolved.mode === "light" ? "#faf9f6" : "#1c211f"}
 					ariaLabel="background hex"
 					testid="input-background"
 					onCommit={(v) => onSectionChange({ ...appearance, background: v === "" ? null : v })}
 				/>
 			</SettingsRow>
 			<SettingsRow
-				label="Reading font"
+				label="正文字体"
 				hint={`Empty = ${DEFAULT_READING_FONT}`}
 				testid="row-font"
 			>
@@ -220,7 +223,7 @@ export function AppearanceSection({
 						const triggerButton = (
 							<SettingsMenuTrigger
 								value={appearance?.fontFamily || DEFAULT_READING_FONT}
-								aria-label="Reading font"
+								aria-label="正文字体"
 								aria-expanded={fontMenuOpen}
 								data-testid="font-trigger"
 								onClick={openFontMenu}
@@ -230,7 +233,7 @@ export function AppearanceSection({
 						return fontMenuOpen ? (
 							triggerButton
 						) : (
-							<Hint label="Choose from your installed fonts" side="left">
+							<Hint label="从本机已安装字体中选择" side="left">
 								{triggerButton}
 							</Hint>
 						);
@@ -253,14 +256,14 @@ export function AppearanceSection({
 											? enumEmpty
 												? "Common families — installed fonts could not be read"
 												: "Common families — your installed list needs the desktop app"
-											: "Your installed fonts"
+											: "本机已安装字体"
 								}
 							/>
 						</MenuShell>
 					)}
 				</span>
 			</SettingsRow>
-			<SettingsRow label="Reading font size" hint={`${resolved.proseFontSize}px`} testid="row-prose-size">
+			<SettingsRow label="正文字号" hint={`${resolved.proseFontSize}px`} testid="row-prose-size">
 				<CommitInput
 					type="number"
 					value={String(appearance?.proseFontSize ?? "")}
@@ -281,14 +284,14 @@ export function AppearanceSection({
 					}}
 				/>
 			</SettingsRow>
-			<SettingsRow label="Session names in serif" testid="row-session-serif">
+			<SettingsRow label="课程标题使用宋体" testid="row-session-serif">
 				<Toggle
 					checked={appearance?.sessionNameSerif ?? true}
 					label="session names serif"
 					onChange={(on) => onSectionChange({ ...appearance, sessionNameSerif: on })}
 				/>
 			</SettingsRow>
-			<SettingsRow label="Heading weight" hint={`${resolved.mdRendering.headingWeight}`} testid="row-heading-weight">
+			<SettingsRow label="标题粗细" hint={`${resolved.mdRendering.headingWeight}`} testid="row-heading-weight">
 				<CommitInput
 					type="number"
 					value={String(md?.headingWeight ?? "")}
@@ -314,7 +317,7 @@ export function AppearanceSection({
 			{/* The emphasis inks default to the REGULAR TEXT COLOR now
 			    (appearance wave, 2026-09-26) — the empty-state labels say
 			    so; explicit hex overrides ride unchanged. */}
-			<SettingsRow label="Bold color" hint="Empty = same as text" testid="row-bold-color">
+			<SettingsRow label="粗体颜色" hint="留空则沿用正文颜色" testid="row-bold-color">
 				<CommitInput
 					value={md?.boldColor ?? ""}
 					placeholder="same as text"
@@ -323,7 +326,7 @@ export function AppearanceSection({
 					onCommit={(v) => onSectionChange({ ...appearance, mdRendering: { ...md, boldColor: v === "" ? null : v } })}
 				/>
 			</SettingsRow>
-			<SettingsRow label="Italic color" hint="Empty = same as text" testid="row-italic-color">
+			<SettingsRow label="斜体颜色" hint="留空则沿用正文颜色" testid="row-italic-color">
 				<CommitInput
 					value={md?.italicColor ?? ""}
 					placeholder="same as text"
@@ -359,7 +362,7 @@ export function GraphSection({
 		<>
 			{/* EXTRACTION (renamed, owner 2026-10-06): this switch is the DATA
 			    channel — the pipeline, the auditor, the prober's graph tools. It
-			    was born labeled "Graph" and that label lied once the rendering
+			    was born labeled "知识图谱" and that label lied once the rendering
 			    switch below arrived: off ≠ no graph, off = the graph stops
 			    growing. The testid keeps the old name's shape (row-enabled) so
 			    this stays one rename, not a test re-pin. */}

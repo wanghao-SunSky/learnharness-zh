@@ -38,7 +38,7 @@ import {
 	type SelectMode,
 	type Phase3,
 } from "@/src/core";
-import { CONFIDENCE_COLORS, confidenceRailStyle } from "@/components/confidence-rail";
+import { confidenceRailStyle } from "@/components/confidence-rail";
 
 /**
  * The question dock — a pending quiz/ask REPLACES the chat composer: the
@@ -68,7 +68,7 @@ export interface QuestionDockProps {
 	expanded: boolean;
 	/**
 	 * Teach-phase check awaiting its reveal (vision §2, W5): while collapsed,
-	 * the bar is the "Check your understanding" invitation instead of the
+	 * the bar is the "检查一下理解" invitation instead of the
 	 * scroll-collapse strip. Owned by the DockOverlay; false once the learner
 	 * has revealed (afterwards the normal collapse machine rules apply).
 	 */
@@ -123,7 +123,7 @@ export function QuestionDock({
 	// The chip's display name carries the tool's OWN name (owner
 	// 2026-10-09): probe-phase questions label Probe/Recall in the
 	// composer; teach tools keep the standing labels.
-	const toolLabel = toolName === "probe" ? "Probe" : toolName === "recall" ? "Recall" : undefined;
+	const toolLabel = toolName === "probe" ? "了解基础" : toolName === "recall" ? "回忆练习" : undefined;
 	// Parse, don't cast (src/core/tool-parts.ts): the model authored this
 	// input, and only the schema the tool declared vouches for its shape.
 	// The dock mounts on input-available parts (already validated at the
@@ -147,7 +147,7 @@ export function QuestionDock({
 					label={
 						(canonical === "quiz" || canonical === "explain") &&
 						normalizeQuizType((parsed as { type?: unknown }).type) === "predict"
-							? "Prediction"
+							? "先做预测"
 							: undefined
 					}
 				/>
@@ -200,7 +200,7 @@ export function QuestionDockBar({
 	question: string;
 	onExpand: () => void;
 	variant?: "collapsed" | "reveal";
-	/** The kind chip's text (owner 2026-10-03): "Prediction" when a
+	/** The kind chip's text (owner 2026-10-03): "先做预测" when a
 	 *  predict-type quiz minimizes by scroll — predictions never use the
 	 *  reveal variant, but the scroll-collapse strip can still hide them. */
 	label?: string;
@@ -220,11 +220,11 @@ export function QuestionDockBar({
 					<PlayIcon className="size-3.5" />
 				</span>
 				<span className="min-w-0 flex-1">
-					<span className="block text-sm font-medium">Check your understanding</span>
+					<span className="block text-sm font-medium">检查一下理解</span>
 					<span className="block truncate text-xs text-muted-foreground">{teaserText(question)}</span>
 				</span>
 				<span className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary">
-					Open <ChevronRightIcon className="size-3.5" />
+					展开 <ChevronRightIcon className="size-3.5" />
 				</span>
 			</button>
 		);
@@ -239,11 +239,11 @@ export function QuestionDockBar({
 			<span className="shrink-0 text-xs font-medium uppercase tracking-wide text-muted-foreground">
 				{label ??
 							toolLabel ??
-							(toolName === "quiz" ? "Check" : toolName === "explain" ? "Explain" : "Question")}
+							(toolName === "quiz" ? "理解检查" : toolName === "explain" ? "用自己的话解释" : "问题")}
 			</span>
 			<span className="min-w-0 flex-1 truncate text-muted-foreground">{teaserText(question)}</span>
 			<span className="flex shrink-0 items-center gap-1 text-xs font-medium">
-				Answer <ArrowDownIcon className="size-3.5" />
+				作答 <ArrowDownIcon className="size-3.5" />
 			</span>
 		</button>
 	);
@@ -340,7 +340,7 @@ function QuestionDockForm({
 
 	// The PRIMARY dictation input (owner, STT round 1): while a question
 	// waits, dictated finals land HERE, never in the hidden composer — text
-	// mode owns "Your answer", select modes own "Your thinking". The claim
+	// mode owns "你的回答", select modes own "Your thinking". The claim
 	// is effect-scoped, so the question unmounting releases it and
 	// dictation falls back to the composer automatically.
 	useDictationTarget(
@@ -396,7 +396,7 @@ function QuestionDockForm({
 			text: qd.mode === "text" ? answerTextRef.current : undefined,
 			thinking: qd.mode !== "text" ? thinkingTextRef.current.trim() || undefined : undefined,
 			// Always sent on quiz answers (owner: 50 must mean 50, never
-			// "untouched"); buildAnswer drops it on "I don't know".
+			// "untouched"); buildAnswer drops it on "暂时不知道".
 			confidence: kind === "quiz" ? CONFIDENCE_STOPS[confIdx] : undefined,
 		};
 		// Snapshot before optimistic submission unmounts the form. Ref values
@@ -422,7 +422,7 @@ function QuestionDockForm({
 
 	/* ── The keyboard machine (shortcut wave B, owner rounds 2026-09-17) ──
 	   ↑/↓ walk EVERY answerable row in order — options first, then the
-	   quiz's "I don't know" or the ask's "Other…" (whichever exists) —
+	   quiz's "暂时不知道" or the ask's "Other…" (whichever exists) —
 	   CLAMPED at the ends, no wrap (owner: faster to navigate when the
 	   walk stops at the last row). Space acts on the walked row exactly
 	   like a click (multi toggles, single displaces; Other also focuses
@@ -525,7 +525,7 @@ function QuestionDockForm({
 			} else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
 				// Global confidence cycling (owner, UI round 2026-10-01): the
 				// SAME pattern as ↑/↓ over the rows — works wherever focus
-				// sits, no click-in, no focus ring. Dead on "I don't know"
+				// sits, no click-in, no focus ring. Dead on "暂时不知道"
 				// (the slider grays out and nothing is sent).
 				if (kind !== "quiz" || sel.dontKnow) return;
 				e.preventDefault();
@@ -563,19 +563,19 @@ function QuestionDockForm({
 			    Capped by the measured column (--dock-max-h; the old fixed 55dvh cut
 			    long questions short — owner round, 2026-10-05). */}
 			<div data-dock-scroll-area="" data-session-find-root="" className="max-h-[var(--dock-max-h,55dvh)] overflow-y-auto px-4 pt-3">
-				<div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+				<div className="lh-question-label mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
 					{toolName === "probe"
-						? "Probe"
+						? "了解基础"
 						: toolName === "recall"
-							? "Recall"
+							? "回忆练习"
 							: kind === "quiz"
 								? qd.questionType === "predict"
-									? "Prediction"
-									: "Check"
+									? "先做预测"
+									: "理解检查"
 									: kind === "explain"
-										? "Explain"
-											: "Question"}
-					{qd.mode === "multi-select" && " · select all that apply"}
+										? "用自己的话解释"
+											: "问题"}
+					{qd.mode === "multi-select" && "（可多选）"}
 				</div>
 				<div className="mb-3 font-medium">
 					<ToolContentResponse>{qd.question}</ToolContentResponse>
@@ -586,6 +586,9 @@ function QuestionDockForm({
 					</div>
 				)}
 
+			</div>
+			<div className={`lh-exercise-body ${qd.mode === "text" ? "lh-exercise-text" : ""}`}>
+				<div className="lh-exercise-options">
 				{qd.mode !== "text" && (
 					<div className="flex flex-col gap-2 pb-2" role={qd.mode === "multi-select" ? "group" : "radiogroup"}>
 						{qd.options.map((opt, i) => {
@@ -621,7 +624,7 @@ function QuestionDockForm({
 										<ToolContentResponse>{opt.label}</ToolContentResponse>
 										{kind !== "quiz" && opt.description && (
 											// Option subtext renders in Source Sans 3 (owner's mockup);
-											// the "I don't know" copy stays JetBrains Mono. QUIZ options render
+											// the "暂时不知道" copy stays JetBrains Mono. QUIZ options render
 											// NO description (owner ruling 2026-09-26): the model used them to
 											// telegraph correctness — the schema dropped the field and old
 											// records must not leak either. Same MessageResponse path as the
@@ -662,7 +665,7 @@ function QuestionDockForm({
 								>
 									{sel.dontKnow && <span className="size-1.5 rounded-full bg-current" />}
 								</span>
-								<span>I don't know</span>
+								<span>暂时不知道</span>
 							</button>
 						)}
 
@@ -729,7 +732,7 @@ function QuestionDockForm({
 												submit();
 											}
 									}}
-									placeholder="Type your own answer…"
+									placeholder="写下其他答案…"
 									className="lh-input w-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
 									onClick={(e) => e.stopPropagation()}
 								/>
@@ -739,6 +742,7 @@ function QuestionDockForm({
 				)}
 			</div>
 
+			<div className="lh-exercise-response">
 			{/* Confidence (owner, 2026-10-01; UI rounds same day): a snapped
 				slider below the options and above "Your thinking" — the
 				learner's stated probability that his selected answer is
@@ -749,11 +753,11 @@ function QuestionDockForm({
 				ticks are background layers behind the fill (empty side only,
 				never over the color; 0/100 need no tick — the flush ends say
 				them). Keyboard: GLOBAL ←/→ (the ↑/↓ pattern; the ring is gone
-				app-wide). Clicking and dragging are native. "I don't know"
+				app-wide). Clicking and dragging are native. "暂时不知道"
 				GRAYS it out — the layout holds, no value is sent, the IDK
 				signal stands alone. */}
 			{kind === "quiz" && (
-				<div className="border-t border-border/60 px-4 py-2.5">
+				<div className="lh-confidence border-t border-border/60 px-4 py-2.5">
 					<div className="flex items-center gap-3">
 						<span
 							className={cn(
@@ -761,7 +765,7 @@ function QuestionDockForm({
 								sel.dontKnow ? "text-muted-foreground/50" : "text-muted-foreground",
 							)}
 						>
-							Confidence
+							你有多大把握
 						</span>
 						<div
 							className={cn("relative h-4 min-w-0 flex-1", sel.dontKnow && "opacity-40")}
@@ -781,7 +785,7 @@ function QuestionDockForm({
 								aria-hidden
 								data-testid="confidence-rail"
 								className="pointer-events-none absolute top-1/2 left-2 right-2 h-1.5 -translate-y-1/2 rounded-full border border-border"
-								style={confidenceRailStyle(CONFIDENCE_STOPS[confIdx]!)}
+								style={confidenceRailStyle(CONFIDENCE_STOPS[confIdx]!, "var(--primary)")}
 							/>
 							<input
 								type="range"
@@ -790,9 +794,9 @@ function QuestionDockForm({
 								step={1}
 								value={CONFIDENCE_STOPS[confIdx]}
 								disabled={sel.dontKnow}
-								aria-label="Confidence — the probability your selected answer is correct"
+								aria-label="你对答案有多大把握"
 								aria-valuetext={`${CONFIDENCE_STOPS[confIdx]} percent`}
-								title="The probability your selected answer is correct — 50% is a coin flip. Adjust with ←/→."
+								title="对答案正确的把握，可用左右方向键调整"
 								data-testid="confidence-slider"
 								onChange={(e) => {
 									// Snap to the nearest stop; the rendered VALUE is the stop's own
@@ -807,7 +811,7 @@ function QuestionDockForm({
 									}
 									setConfIdx(best);
 								}}
-								style={{ color: CONFIDENCE_COLORS[confIdx] }}
+								style={{ color: "var(--primary)" }}
 								className={cn(
 									"absolute inset-0 h-4 w-full cursor-pointer appearance-none bg-transparent outline-none",
 									"[&::-webkit-slider-runnable-track]:h-4 [&::-webkit-slider-runnable-track]:bg-transparent",
@@ -834,7 +838,7 @@ function QuestionDockForm({
 			    field with Submit docked inside, exactly like the chat composer's
 			    send. Select modes get "Your thinking" (Enter makes a newline — it
 			    is for dumping, soon dictated; the button submits); text mode
-			    keeps "Your answer" with Enter-to-submit. */}
+			    keeps "你的回答" with Enter-to-submit. */}
 			<form
 				className="border-t border-border/60 p-1.5"
 				onSubmit={(e) => {
@@ -847,10 +851,11 @@ function QuestionDockForm({
 					className="rounded-[10px] border border-border/70 bg-background/60 transition-colors focus-within:border-primary/50"
 				>
 					<div className="px-2.5 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-						{qd.mode === "text" ? "Your answer" : "YOUR THINKING"}
+						{qd.mode === "text" ? "你的回答" : "你的解题思路"}
 					</div>
 					{qd.mode === "text" ? (
 						<PathInput
+							aria-label="你的回答"
 							value={text}
 							onValueChange={(value) => {
 								answerTextRef.current = value;
@@ -873,11 +878,12 @@ function QuestionDockForm({
 									submit();
 								}
 							}}
-							placeholder="Type your answer…"
+							placeholder="写下你的回答…"
 							className="field-sizing-content lh-input max-h-48 min-h-10 w-full resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground"
 						/>
 					) : (
 						<PathInput
+							aria-label="你的解题思路"
 							ref={thinkingRef}
 							value={thinking}
 							onValueChange={(value) => {
@@ -902,7 +908,7 @@ function QuestionDockForm({
 									submit();
 								}
 							}}
-							placeholder="Why this answer? Whatever comes to mind."
+							placeholder="为什么这样选？写下你的思路。（选填）"
 							className={cn(
 								"field-sizing-content lh-input max-h-48 w-full resize-none bg-transparent px-2.5 py-2 outline-none placeholder:text-muted-foreground/70",
 								// Phase-scaled prominence: teaching invites depth,
@@ -911,20 +917,22 @@ function QuestionDockForm({
 							)}
 						/>
 					)}
-					<div className="flex items-center justify-between gap-2 p-1">
+					<div className="lh-answer-actions flex items-center justify-between gap-2 p-1">
 						<span aria-hidden className="pl-1.5 text-xs text-muted-foreground">
-								{compactionRunning ? "compacting session…" : "↵ submits · ⇧↵ newline"}
+								{compactionRunning ? "正在整理课程…" : "回车提交 · Shift + 回车换行"}
 						</span>
 						<Button
 							type="submit"
 							disabled={!canSubmit || compactionRunning}
 							className="ml-auto h-9 rounded-[6px] px-3.5 text-sm font-medium"
 						>
-							Submit answer
+							提交回答
 						</Button>
 					</div>
 				</div>
 			</form>
+			</div>
+			</div>
 		</div>
 	);
 }

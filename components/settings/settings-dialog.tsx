@@ -57,12 +57,12 @@ import { NativeSubscriptionUIProvider } from "./subscription-connections.tsx";
  *  prose is out; only the keyboard note stays (storage location is a
  *  real question users ask). */
 const SECTIONS = [
-	{ id: "keys", label: "Providers" },
-	{ id: "agent", label: "Agent" },
-	{ id: "appearance", label: "Appearance" },
-	{ id: "graph", label: "Graph" },
-	{ id: "keyboard", label: "Keyboard", hint: "Stored on this device" },
-	{ id: "general", label: "General" },
+	{ id: "keys", label: "模型服务" },
+	{ id: "agent", label: "教学设置" },
+	{ id: "appearance", label: "阅读外观" },
+	{ id: "graph", label: "知识图谱" },
+	{ id: "keyboard", label: "快捷键", hint: "保存在本机" },
+	{ id: "general", label: "通用" },
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
 
@@ -359,7 +359,7 @@ export function SettingsDialogBody({
 						<div>
 							{active === "general" && (
 								<SettingsSection
-									title="General"
+									title="通用"
 									testid="section-general"
 								>
 									<UpdateSettings
@@ -371,13 +371,13 @@ export function SettingsDialogBody({
 								</SettingsSection>
 							)}
 							{active === "keys" && (
-								<SettingsSection title="Providers" testid="section-keys">
+								<SettingsSection title="模型服务" testid="section-keys">
 									<KeysSection initialRow={initialRow ?? undefined} />
 								</SettingsSection>
 							)}
 							{active === "agent" && (
 								<SettingsSection
-									title="Agent"
+									title="教学设置"
 									testid="section-agent"
 								>
 									<AgentSection
@@ -400,7 +400,7 @@ export function SettingsDialogBody({
 							)}
 							{active === "appearance" && (
 								<SettingsSection
-									title="Appearance"
+									title="阅读外观"
 									testid="section-appearance"
 								>
 									<AppearanceSection
@@ -413,7 +413,7 @@ export function SettingsDialogBody({
 							)}
 							{active === "graph" && (
 								<SettingsSection
-									title="Graph"
+									title="知识图谱"
 									testid="section-graph"
 								>
 									<GraphSection
@@ -426,8 +426,8 @@ export function SettingsDialogBody({
 							)}
 							{active === "keyboard" && (
 								<SettingsSection
-									title="Keyboard"
-									hint="Stored on this device"
+									title="快捷键"
+									hint="保存在本机"
 									testid="section-keyboard"
 								>
 									<KeyboardSection />

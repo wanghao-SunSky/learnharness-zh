@@ -51,7 +51,7 @@ export { isDictationActive } from "@/components/dictation-state";
  * Owner round 1 (2026-09-17, first live mic test):
  *   - ONE primary transcription input at all times: the pending
  *     quiz/ask question's field while one waits (text mode → the answer
- *     field, select modes → "Your thinking"), else the page's composer.
+ *     field, select modes → "你的解题思路"), else the page's composer.
  *     Implemented as a module-level registry the question form claims on
  *     mount — see useDictationTarget below.
  *   - Click → meter IMMEDIATELY (optimistic): the meter strip renders
@@ -634,7 +634,7 @@ export function useDictation({ append }: { append: (text: string) => void }): Di
  * The stats-bar dictation slot (owner placement, round 1): the row's middle
  * is one strip that is always the full free width —
  *
- *   idle      a wide, quiet "Dictate" button (mic + label, grayed out — the
+ *   idle      a wide, quiet "语音输入" button (mic + label, grayed out — the
  *             whole middle is the affordance, per the owner).
  *   active    optimistic from the CLICK: red stop pill + the fixed-width
  *             meter (no interim text ever shifts it). Spinner while
@@ -695,7 +695,7 @@ export function DictationBar({ dictation }: { dictation: Dictation }) {
 		return (
 			<Hint
 				// The error line truncates in the button; its tooltip reveals it.
-				label={error ?? "Dictate"}
+				label={error ?? "语音输入"}
 				action={error ? undefined : "toggle-dictation"}
 				side="top"
 			>
@@ -714,7 +714,7 @@ export function DictationBar({ dictation }: { dictation: Dictation }) {
 					className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-border/50 bg-card/50 text-xs text-muted-foreground/70 shadow-lg backdrop-blur transition-colors hover:border-border hover:text-muted-foreground"
 				>
 					<MicIcon className="size-3.5" />
-					<span className="max-w-full truncate">{error ?? "Dictate"}</span>
+					<span className="max-w-full truncate">{error ?? "语音输入"}</span>
 				</button>
 			</Hint>
 		);

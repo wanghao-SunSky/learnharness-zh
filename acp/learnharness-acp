@@ -1,0 +1,2 @@
+#!/bin/sh
+exec "${NODE_BINARY:-node}" "$(dirname "$0")/bridge.mjs" "$@"

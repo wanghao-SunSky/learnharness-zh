@@ -58,7 +58,7 @@ describe("SessionRow", () => {
 		const html = render(item({ phase: "teach", pendingQuestion: true }));
 		assert.ok(!html.includes("session-dot"), "no dots");
 		assert.ok(!html.includes("braille-spinner"), "motion is reserved for working");
-		assert.ok(html.includes("Waiting for input"), "the meta line's text");
+		assert.ok(html.includes("等待回答"), "the meta line's text");
 		assert.ok(!html.includes("Waiting for your answer"), "old wording is gone");
 	});
 
@@ -85,7 +85,7 @@ describe("SessionRow", () => {
 		// Local noon: timeAgo renders the local date, so a fixed UTC instant
 		// lands on 2026-01-01 west of UTC.
 		const awaiting = render(item({ pendingQuestion: true, updatedAt: new Date(2026, 0, 2, 12).toISOString() }));
-		assert.ok(awaiting.includes("Waiting for input · 2026-01-02"), "awaiting meta keeps the existing date");
+		assert.ok(awaiting.includes("等待回答 · 2026-01-02"), "awaiting meta keeps the existing date");
 		assert.ok(!awaiting.includes("messages"), "count yields to the state");
 		assert.ok(!awaiting.includes("braille-spinner"), "…and the spinner stays off");
 
@@ -104,7 +104,7 @@ describe("SessionRow", () => {
 		for (const kind of ["teach", "practice"] as const) {
 			for (const updatedAt of [new Date().toISOString(), "2025-06-02T12:00:00.000Z"]) {
 				const html = render(item({ kind, pendingQuestion: true, updatedAt }));
-				assert.ok(html.includes(`Waiting for input · ${timeAgo(updatedAt)}`));
+				assert.ok(html.includes(`等待回答 · ${timeAgo(updatedAt)}`));
 				assert.ok(!html.includes("Waiting for your answer"));
 			}
 		}
@@ -113,7 +113,7 @@ describe("SessionRow", () => {
 	it("compacting retains priority over pending input", () => {
 		const html = render(item({ compacting: true, pendingQuestion: true }));
 		assert.match(html, /Compacting context ·/);
-		assert.doesNotMatch(html, /Waiting for input/);
+		assert.doesNotMatch(html, /等待回答/);
 	});
 
 	it("active row is visually marked by the background alone (owner, round 5: no weight change)", () => {
@@ -127,17 +127,17 @@ describe("timeAgo", () => {
 	const now = new Date("2026-01-02T12:00:00.000Z");
 
 	it("just now / minutes / hours / days, then the ISO date (owner, round 5)", () => {
-		assert.equal(timeAgo("2026-01-02T11:59:30.000Z", now), "just now");
-		assert.equal(timeAgo("2026-01-02T11:55:00.000Z", now), "5m ago");
-		assert.equal(timeAgo("2026-01-02T09:00:00.000Z", now), "3h ago");
-		assert.equal(timeAgo("2025-12-31T12:00:00.000Z", now), "2d ago");
+		assert.equal(timeAgo("2026-01-02T11:59:30.000Z", now), "刚刚");
+		assert.equal(timeAgo("2026-01-02T11:55:00.000Z", now), "5 分钟前");
+		assert.equal(timeAgo("2026-01-02T09:00:00.000Z", now), "3 小时前");
+		assert.equal(timeAgo("2025-12-31T12:00:00.000Z", now), "2 天前");
 		// Local noon, so the local date is 2025-06-02 in every time zone.
 		const old = new Date(2025, 5, 2, 12).toISOString();
 		assert.equal(timeAgo(old, now), "2025-06-02", "beyond a week: ISO — unambiguous, sortable");
 	});
 
 	it("negative drift (clock skew) reads as just now, never a future date", () => {
-		assert.equal(timeAgo("2026-01-02T12:01:00.000Z", now), "just now");
+		assert.equal(timeAgo("2026-01-02T12:01:00.000Z", now), "刚刚");
 	});
 });
 

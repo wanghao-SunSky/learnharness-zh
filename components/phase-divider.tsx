@@ -14,7 +14,7 @@ import type { Phase3 } from "@/src/core";
  *
  * Quiet register (matches the old divider): hairline rules, small chips —
  * never a banner. Probe never renders a divider: phases only advance, so
- * probe is the start of the transcript and "Planning"/"Teaching" are the two
+ * probe is the start of the transcript and "制定计划"/"讲解" are the two
  * visible seams.
  *
  * Owner, minimal-color round 2: the chip is LABEL-ONLY, deliberately — a
@@ -26,9 +26,9 @@ import type { Phase3 } from "@/src/core";
 
 /** Header-chip labels: the phases as the learner thinks of them. */
 const CHIP_LABEL: Record<Phase3, string> = {
-	probe: "Probing",
-	plan: "Planning",
-	teach: "Teaching",
+	probe: "了解基础",
+	plan: "制定计划",
+	teach: "讲解",
 };
 
 /** The header label: the phase as a quiet flat tag (owner,
@@ -63,7 +63,7 @@ export function PhaseDivider({ phase, nodeCount }: { phase: Phase3; nodeCount?: 
 	if (phase === "probe") return null;
 	const label =
 		phase === "plan" && nodeCount
-			? `Plan · ${nodeCount} node${nodeCount === 1 ? "" : "s"}`
+			? `学习计划 · ${nodeCount} 个知识点`
 			: CHIP_LABEL[phase];
 	return (
 		<div className="my-4 flex w-full items-center gap-3" data-testid={`phase-divider-${phase}`}>

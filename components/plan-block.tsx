@@ -62,6 +62,7 @@ export const PAD_X = 16;
 export const NODE_W_MIN = 96;
 export const NODE_H = 44;
 
+// CJK glyphs occupy a full 12px em; Latin uses the existing estimate.
 // Width classes for the PROSE font (Source Sans 3 as shipped, text-xs
 // rendering at 11px): narrow stems and punctuation, wide m/w, caps +
 // digits, everything else. Rates least-squares-fitted against
@@ -77,7 +78,8 @@ const CAP_DIGIT = /[A-Z0-9]/;
 export function estimateLineWidth(line: string): number {
 	let w = 0;
 	for (const ch of line) {
-		if (NARROW_CHARS.has(ch)) w += 3.1;
+		if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\u3000-\u303f\uff00-\uffef]/u.test(ch)) w += 12;
+		else if (NARROW_CHARS.has(ch)) w += 3.1;
 		else if (WIDE_CHARS.has(ch)) w += 9.2;
 		else if (CAP_DIGIT.test(ch)) w += 6.0;
 		else w += 5.4;
@@ -85,7 +87,7 @@ export function estimateLineWidth(line: string): number {
 	return w;
 }
 /** Baseline-to-baseline distance of node titles. */
-export const LINE_H = 13;
+export const LINE_H = 18;
 export const GAP_X = 24;
 export const GAP_Y = 48;
 
@@ -447,21 +449,21 @@ const BOX: Record<PlanNodeStatus, string> = {
 	// 50%-opacity app background instead of true transparency: a routed
 	// edge passing behind the box composites UNDER the fill — dimmed to
 	// half, not shown straight through (owner, round 9).
-	visited: "fill-background/50 stroke-white",
-	current: "fill-background/50 stroke-white",
+	visited: "fill-background/50 stroke-muted-foreground",
+	current: "fill-background/50 stroke-muted-foreground",
 	// The grayed-out not-yet-visited look stays as-is (owner).
 	upcoming: "fill-card stroke-border",
 };
 const TEXT: Record<PlanNodeStatus, string> = {
-	visited: "fill-white text-xs",
-	current: "fill-white text-xs font-medium",
+	visited: "fill-foreground text-xs",
+	current: "fill-foreground text-xs font-medium",
 	upcoming: "fill-muted-foreground/80 text-xs",
 };
 // The in-chat block speaks the dock language now (owner, plan-hug
 // round 2026-10-07): boxes in the lighter background variant like
 // the composer/dock shells — but the outlines STAY white (owner
 // follow-up: the gray fill is good, white box edges).
-const MONO_BOX = "fill-card stroke-white";
+const MONO_BOX = "fill-card stroke-muted-foreground";
 const MONO_TEXT = "fill-foreground text-xs";
 
 /** The diagram itself: positioned nodes + bezier edges. Pure-ish render —
@@ -540,7 +542,7 @@ export function PlanDiagram({
 						: {}),
 			}}
 			role="img"
-			aria-label="Plan diagram"
+			aria-label="学习计划图"
 		>
 			<defs>
 				<marker
@@ -555,7 +557,7 @@ export function PlanDiagram({
 				>
 					{/* The owner's arrowhead. The mouth (x 27.2) sits at refX so the
 					    line ends AT the notch — the tip beyond it is solid fill. */}
-					<path d={ARROW_HEAD} className="fill-white" />
+					<path d={ARROW_HEAD} className="fill-foreground" />
 				</marker>
 				{/* Same head, grayed — arrows into not-yet-visited nodes are
 				    grayed out like the nodes themselves (owner, round 6). */}
@@ -604,7 +606,7 @@ export function PlanDiagram({
 					<path
 						key={`${e.from}->${e.to}`}
 						d={edgePathD(pts, target)}
-						className={dim ? "fill-none stroke-border" : "fill-none stroke-white"}
+						className={dim ? "fill-none stroke-border" : "fill-none stroke-muted-foreground"}
 						strokeWidth={STROKE_W}
 						markerEnd={`url(#${markerId}${dim ? "-dim" : ""})`}
 					/>
@@ -644,7 +646,7 @@ export function PlanDiagram({
 								y={-GLOW_MARGIN}
 								width={w + 2 * GLOW_MARGIN}
 								height={h + 2 * GLOW_MARGIN}
-								className="fill-yellow-400/25"
+								className="fill-primary/15"
 								filter={`url(#${markerId}-glow)`}
 							/>
 						)}
@@ -680,11 +682,11 @@ export function PlanBlock({ data, onOpen }: { data: PlanBlockData; onOpen: () =>
 	const statusMap = useMemo(() => new Map(data.nodes.map((n) => [n.id, n.status] as const)), [data]);
 	const statusOf = (id: string): PlanNodeStatus => statusMap.get(id) ?? "upcoming";
 	return (
-		<Hint label="Open the full plan" side="bottom">
+		<Hint label="查看完整学习计划" side="bottom">
 <button
 			type="button"
 			data-testid="plan-block-full"
-			aria-label="Open the full plan"
+			aria-label="查看完整学习计划"
 			onClick={onOpen}
 			className="block w-full text-left"
 		>
