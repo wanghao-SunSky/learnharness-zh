@@ -99,7 +99,7 @@ codesign --force --deep --sign - "dist-personal/mac-arm64/LearnHarness Personal.
 
 ## 上游协作与问题反馈
 
-- **与上游的关系**：本仓库只作为个人实践参考公开，不请求上游合并整包改造，也不打算另起一套竞争性的 i18n 框架。计划先向上游沟通是否需要保持默认外观不变的小范围 CJK 字体/阅读排版改进；中文界面翻译后续对齐上游既有国际化讨论（如 [#407](https://github.com/amosblomqvist/learnharness/issues/407)、[#457](https://github.com/amosblomqvist/learnharness/pull/457)），书刊主题、ACP 转接与默认置信度保持在个人分支独立维护。拟提交的中文说明草稿见 [docs/upstream-proposal.md](docs/upstream-proposal.md)。
+- **与上游的关系**：本仓库只作为个人实践参考公开，不请求上游合并整包改造，也不打算另起一套竞争性的 i18n 框架。计划先向上游沟通是否需要保持默认外观不变的小范围 CJK 字体/阅读排版改进；中文界面翻译后续对齐上游既有国际化讨论（如 [#407](https://github.com/amosblomqvist/learnharness/issues/407)、[#457](https://github.com/amosblomqvist/learnharness/pull/457)），书刊主题、ACP 转接与默认置信度保持在个人分支独立维护。上游讨论：[#672](https://github.com/amosblomqvist/learnharness/issues/672)；中文说明见 [docs/upstream-proposal.md](docs/upstream-proposal.md)。
 - **反馈渠道**：凡属本仓库中文界面、Personal 打包或 ACP 转接的问题，请提交至[本仓库 Issues](https://github.com/wanghao-SunSky/learnharness-zh/issues)，不要把衍生版特有的问题报给上游。本仓库不承诺跟随上游每次更新实时同步。
 
 ## English Summary
