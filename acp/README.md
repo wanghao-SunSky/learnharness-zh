@@ -1,5 +1,15 @@
 # LearnHarness Personal 实验性本地 ACP 转接器
 
+## 安装包用户快速接入
+
+将下载的 `LearnHarness Personal.app` 放入 `/Applications` 并打开，在设置中配置好模型。在 T3 等支持 ACP 的客户端表单中，「可执行文件」填入以下路径，「参数」留空：
+
+```text
+/Applications/LearnHarness Personal.app/Contents/Resources/acp/learnharness-acp
+```
+
+转接器直接使用应用自带运行时。使用时保持应用与客户端宿主运行，手机即可通过宿主远程连接使用。源码开发步骤见下文。
+
 本目录提供一个运行在 macOS 本机的实验性 ACP（Agent Client Protocol）转接器，用于让支持表单提问（`elicitation.form`）的客户端直接读写**正在运行的 `LearnHarness Personal` 课程后端**。
 
 它不会另起一套教学引擎，也不会复制课程数据库，而是复用桌面端现有的题目乱序、判分规则、课程历史与模型配置。开发时基于 T3 Code `0.1.7` 对接测试；其他客户端若要接入，必须支持 ACP 表单能力。

@@ -1,2 +1,7 @@
 #!/bin/sh
-exec "${NODE_BINARY:-node}" "$(dirname "$0")/bridge.mjs" "$@"
+runtime_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd) || exit 1
+packaged_runtime="$runtime_dir/../../MacOS/LearnHarness Personal"
+if [ -x "$packaged_runtime" ]; then
+  exec env ELECTRON_RUN_AS_NODE=1 "$packaged_runtime" "$runtime_dir/bridge.mjs" "$@"
+fi
+exec "${NODE_BINARY:-node}" "$runtime_dir/bridge.mjs" "$@"

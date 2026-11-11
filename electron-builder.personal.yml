@@ -7,6 +7,17 @@ mac:
   icon: build/icon.icns
   identity: null
   notarize: false
+  extraResources:
+    - from: electron/server-title-guard.cjs
+      to: server-title-guard.cjs
+    - from: acp
+      to: acp
+      filter:
+        - bridge.mjs
+        - core.mjs
+        - learnharness-acp
+    - from: LICENSE
+      to: licenses/LICENSE
   electronLanguages:
     - en
     - zh_CN
