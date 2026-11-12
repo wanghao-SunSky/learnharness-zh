@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { pendingQuestionOf, activeProblemOf, formFor, answerFor, visibleRows } from './core.mjs';
+import { pendingQuestionOf, activeProblemOf, formFor, answerFor, visibleRows, planEntries, courseTitle, handoffRequest } from './core.mjs';
 
 const aliasDir = process.env.LH_ACP_STATE_DIR || join(homedir(), 'Library/Application Support/LearnHarness Personal/acp/sessions');
 const defaultSocket = join(homedir(), 'Library/Application Support/LearnHarness Personal/acp/bridge.sock');
@@ -15,13 +15,18 @@ export function learnerText(prompt) {
   // T3 wraps coding-agent instructions around user text. Learning runs have
   // their own tools and system prompt; keep only the actual learner request.
   const wrapped=text.match(/^<t3_code_instructions>[\s\S]*?<\/t3_code_instructions>\s*<user_request>\s*([\s\S]*?)\s*<\/user_request>(?=\s*(?:<runtime_info>|<pull_request_linking>|$))/);
-  if(wrapped)return wrapped[1].trim();
+  if(wrapped)return handoffRequest(wrapped[1].trim());
   // Follow-up turns omit the outer wrapper but still append these host notes.
-  return text
+  return handoffRequest(text
     .replace(/\s*<pull_request_linking>\s*Link each PR[\s\S]*?<\/pull_request_linking>\s*$/, '')
     .replace(/\s*<runtime_info>In case you're asked: you are running in T3 Code[\s\S]*?<\/runtime_info>\s*$/, '')
-    .trim();
+    .trim());
 }
+const COMMANDS=[
+  {name:'continue',description:'重新打开待答题'},
+  {name:'refresh',description:'同步最新课程记录，不调用模型'},
+  {name:'retry',description:'重试失败的回合'},
+];
 export class Backend {
   constructor(socketPath = process.env.LH_ACP_SOCKET || defaultSocket) { this.socketPath = socketPath; }
   async response(path, body, signal) {
@@ -60,7 +65,8 @@ export class Backend {
 export class Bridge {
   constructor(backend, write, stateDir=aliasDir) { this.backend=backend; this.write=write; this.aliasDir=stateDir; this.requests=new Map(); this.sessions=new Map(); this.ordinal=0; this.canForm=false; }
   notify(method, params) { this.write({jsonrpc:'2.0',method,params}); }
-  say(id,text,role='assistant') { if(text) this.notify('session/update',{sessionId:id,update:{sessionUpdate:role==='user'?'user_message_chunk':'agent_message_chunk',content:{type:'text',text}}}); }
+  say(id,text,role='assistant') { if(text) this.notify('session/update',{sessionId:id,update:{sessionUpdate:role==='user'?'user_message_chunk':role==='thought'?'agent_thought_chunk':'agent_message_chunk',content:{type:'text',text}}}); }
+  update(id,update){this.notify('session/update',{sessionId:id,update});}
   ask(params, signal) {
     const id=`lh-${++this.ordinal}`;
     return new Promise((resolve,reject)=>{
@@ -88,11 +94,12 @@ export class Bridge {
       for(const name of await fs.readdir(this.aliasDir).catch(()=>[])){if(!/^chat_acp_[a-f0-9-]+\.json$/.test(name))continue;try{const v=JSON.parse(await fs.readFile(join(this.aliasDir,name),'utf8'));aliases.set(v.backendId,name.slice(0,-5));}catch{}}
       return {sessions:chats.map(c=>({sessionId:aliases.get(c.id)||c.id,cwd:p.cwd||process.cwd(),title:c.title,updatedAt:typeof c.updatedAt==='number'?new Date(c.updatedAt).toISOString():c.updatedAt}))};
     }
-    if(method==='session/new'){const id='chat_acp_'+randomUUID();this.sessions.set(id,{seen:new Map(),cwd:p.cwd,backendId:null});return {sessionId:id,...this.modelState()};}
+    if(method==='session/new'){const id='chat_acp_'+randomUUID();this.sessions.set(id,{seen:new Map(),cwd:p.cwd,backendId:null});this.update(id,{sessionUpdate:'available_commands_update',availableCommands:COMMANDS});return {sessionId:id,...this.modelState()};}
     if(method==='session/load'){
       this.validateId(p.sessionId);let backendId=p.sessionId;
       if(p.sessionId.startsWith('chat_acp_')){const alias=JSON.parse(await fs.readFile(join(this.aliasDir,p.sessionId+'.json'),'utf8'));backendId=alias.backendId;this.validateId(backendId);}
       const s={seen:new Map(),cwd:p.cwd,backendId};this.sessions.set(p.sessionId,s);const r=await this.getRecord(p.sessionId);this.render(r,s,true);
+      this.update(p.sessionId,{sessionUpdate:'available_commands_update',availableCommands:COMMANDS});
       this.say(p.sessionId,'\n\n已连接同一节 LearnHarness 课程。发送“继续”显示待答题，或发送 /refresh 刷新。\n');return this.modelState();
     }
     if(method==='session/set_model'){if(p.modelId!=='learnharness-configured')throw new Error('模型由 LearnHarness 课程设置管理');return {};}
@@ -105,10 +112,23 @@ export class Bridge {
     // Wire messages have no persisted id yet. Timestamp survives settlement.
     const messages=(record.messages??[]).map(m=>({...m,id:typeof m.timestamp==='number'?`acp_${m.role}_${m.timestamp}`:m.id}));
     for(const row of visibleRows(messages)){
+      if(row.kind==='tool'){
+        const old=s.seen.get(row.id);
+        if(!old)this.update(record.id,{sessionUpdate:'tool_call',toolCallId:`lh:${row.id}`,title:row.title,kind:row.toolKind,status:row.status});
+        else if(old!==row.status)this.update(record.id,{sessionUpdate:'tool_call_update',toolCallId:`lh:${row.id}`,status:row.status});
+        s.seen.set(row.id,row.status);continue;
+      }
       const old=s.seen.get(row.id)||'';
       if(row.text!==old && (includeUser || row.role!=='user'))this.say(record.id, row.text.startsWith(old)?row.text.slice(old.length)+(old?'':'\n\n'):row.text+'\n\n',row.role);
       s.seen.set(row.id,row.text);
     }
+    this.syncMeta(record,s);
+  }
+  syncMeta(record,s){
+    const entries=planEntries(record),planKey=entries&&JSON.stringify(entries);
+    if(planKey&&planKey!==s.planKey){s.planKey=planKey;this.update(record.id,{sessionUpdate:'plan',entries});}
+    const title=courseTitle(record);
+    if(title&&title!==s.title){s.title=title;this.update(record.id,{sessionUpdate:'session_info_update',title});}
   }
   async follow(id,s,signal){
     const r=await this.getRecord(id,signal);this.render(r,s);
@@ -125,7 +145,7 @@ export class Bridge {
     if(final.turnError)throw new Error(typeof final.turnError==='string'?final.turnError:'LearnHarness 本轮生成失败，请在桌面查看详情');
     return final;
   }
-  async collect(id,pending,signal){
+  async collect(id,pending,signal,tree){
     if(!this.canForm)throw new Error('当前 T3 版本未声明支持 ACP 提问表单，请升级 T3；原课程仍可在 LearnHarness 中继续。');
     const local=new AbortController();const abort=()=>local.abort();signal.addEventListener('abort',abort,{once:true});
     let changed=false,checking=false;
@@ -133,7 +153,7 @@ export class Bridge {
       if(checking)return;checking=true;
       try{const r=await this.getRecord(id,local.signal);if(pendingQuestionOf(r.messages)?.key!==pending.key){changed=true;local.abort();}}catch{}finally{checking=false;}
     },1500);
-    try{return await this.ask({sessionId:id,mode:'form',message:pending.input.question,requestedSchema:formFor(pending)},local.signal);}
+    try{return await this.ask({sessionId:id,mode:'form',message:pending.input.question,requestedSchema:formFor(pending,tree)},local.signal);}
     catch(e){if(changed)return {action:'changed'};throw e;}
     finally{clearInterval(timer);signal.removeEventListener('abort',abort);local.abort();}
   }
@@ -150,6 +170,8 @@ export class Bridge {
         const created=await this.backend.json('/api/chats',{title:text.slice(0,100)});s.backendId=created.id;
         await fs.mkdir(this.aliasDir,{recursive:true,mode:0o700});await fs.writeFile(join(this.aliasDir,id+'.json'),JSON.stringify({backendId:created.id,cwd:s.cwd}),{mode:0o600,flag:'wx'});
       }
+      // T3 drops replayed updates during load; resend plan and title in this turn.
+      s.planKey=undefined;s.title=undefined;
       let r=await this.follow(id,s,signal);
       if(text==='/refresh'){this.say(id,'\n已同步最新课程记录。\n');return {stopReason:'end_turn'};}
       if(!pendingQuestionOf(r.messages)){
@@ -164,7 +186,7 @@ export class Bridge {
       while(true){
         signal.throwIfAborted();
         const pending=pendingQuestionOf(r.messages);if(!pending)break;
-        const response=await this.collect(id,pending,signal);
+        const response=await this.collect(id,pending,signal,r.tree);
         if(response.action==='changed'){invalidAttempts=0;this.say(id,'\n这道题已在另一端处理，正在同步。\n');r=await this.follow(id,s,signal);continue;}
         if(response.action!=='accept'){this.say(id,'\n未提交答案，课程仍停留在这道题。发送“继续”可再次作答。\n');break;}
         let answer;
